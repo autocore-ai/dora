@@ -10,6 +10,8 @@ members = [
     "binaries/*",
     "examples/rust-dataflow/*",
     "examples/iceoryx/*",
+    "examples/ndt_localizer/src/voxel_grid_filter",
+    "examples/ndt_localizer/src/ndt_localizer",
     "libraries/communication-layer/*",
     "libraries/core",
     "libraries/message",
@@ -53,3 +55,7 @@ path = "examples/python-dataflow/run.rs"
 [[example]]
 name = "iceoryx"
 path = "examples/iceoryx/run.rs"
+
+[[example]]
+name = "ndt-dataflow"
+path = "examples/ndt_localizer/run.rs"

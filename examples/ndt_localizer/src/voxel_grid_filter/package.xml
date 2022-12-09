@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<package format="3">
+    <name>voxel_grid_filter</name>
+    <version>0.1.0</version>
+    <description>voxel_grid_filter package</description>
+    <maintainer email="carl.liu@autocore.ai">carl liu</maintainer>
+    <license>BSD</license>
+
+    <buildtool_depend>ament_cmake_auto</buildtool_depend>
+    <!-- <buildtool_depend>ament_cmake</buildtool_depend>  -->
+
+    <build_depend>sensor_msgs</build_depend>
+    <build_depend>pcl_conversions</build_depend>
+    <build_depend>cereal_ros_msgs</build_depend>
+
+    <!-- The export tag contains other, unspecified, tags -->
+    <export>
+        <build_type>ament_cmake</build_type>
+    </export>
+</package>

@@ -1,0 +1,58 @@
+communication:
+  zenoh:
+    prefix: /ndt-dataflow
+
+nodes:
+  - id: map_loader
+    custom:
+      source: install/map_loader/lib/map_loader/map_loader_native
+      inputs:
+        tick: dora/timer/millis/10000
+      outputs:
+        - map_points
+  
+  - id: rosbag_dummy
+    custom:
+      source: install/rosbag_dummy/lib/rosbag_dummy/rosbag_dummy_native
+      inputs:
+        tick: dora/timer/millis/1000
+      outputs:
+        - pointcloud
+
+  - id: tf_publisher
+    custom:
+      source: install/tf_publisher/lib/tf_publisher/tf_publisher_native
+      inputs:
+        tick: dora/timer/millis/10000
+      outputs:
+        - tf_baselink2lidar
+
+  - id: pose_initializer
+    custom:
+      source: install/pose_initializer/lib/pose_initializer/pose_initializer_native
+      inputs:
+        tick: dora/timer/millis/10000
+      outputs:
+        - initial_pose
+
+  - id: runtime-node
+    operators:
+      - id: voxel_grid_filter
+        shared-library: ../../target/debug/voxel_grid_filter
+        inputs:
+          pointcloud: rosbag_dummy/pointcloud
+        outputs:
+          - filted_pointcloud
+    
+      - id: ndt_localizer
+        shared-library: ../../target/debug/ndt_localizer
+        inputs:
+          initial_pose: pose_initializer/initial_pose
+          map_points: map_loader/map_points
+          tf_baselink2lidar: tf_publisher/tf_baselink2lidar
+          pointcloud: runtime-node/voxel_grid_filter/filted_pointcloud
+        outputs:
+          - ndt_pose
+          - tf_map2baselink
+          - transform_probability
+          - iteration_num

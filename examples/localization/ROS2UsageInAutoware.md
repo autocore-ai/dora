@@ -1,0 +1,315 @@
+# AW中涉及ROS2使用部分整理
+
+## ROS2的基本概念
+
+[Ros官方文档](https://docs.ros.org/en/humble/Tutorials.html)
+
+几个重要的基本概念
+
+- [节点(Node)](https://docs.ros.org/en/humble/Tutorials/Beginner-CLI-Tools/Understanding-ROS2-Nodes/Understanding-ROS2-Nodes.html)
+  基本逻辑功能单元, 包括topic的Pub/Sub, service的Request/Response, parameters的设置和传递等
+
+- [内部ROS2接口](https://docs.ros.org/en/humble/Concepts/About-Internal-Interfaces.html)
+  公共C API接口, 适用于那些正在创建客户端库或增加新的底层中间件的开发人员, 而不适用于一般的ROS使用者. 
+
+  主要包括
+
+> rmw, ROS中间件接口. rmw是ROS2软件栈和底层中间件实现之间的接口. 底层中间件可以是某个DDS实现或RTPS实现, 它负责发现、发布和订阅机制、服务的请求-响应机制以及消息类型的序列化, 不同中间件实现的提供商必须实现rmw接口.
+>
+> rcl, ROS客户端库接口. rcl是更高级的API, 旨在为各种客户端库可以使用ROS更复杂概念和实用工具提供一个通用实现, 而与所使用的底层中间件无关. 即各客户端库不直接接触中间件实现, 而是通过ROS中间件接口(rmw API)抽象来间接接触中间件实现.
+>
+> rosidl, 包含一些与消息相关的静态函数和类型, 以及不同语言的消息应该生成哪些代码的定义. 实现从用户定义的idl文件生成面向用户的头文件, 有了这些代码, 用户就可以使用类似 "#include <std_msgs/msg/string.hpp>" 这样的语句来使用这些文件.
+>
+> rcutils, 一个C语言API, 由在ROS2中使用的宏, 函数和数据结构构成. 主要用于错误处理, 命令行参数解析和日志记录. 它们不是专门用于客户端层或中间件层的, 而是可以由客户端层和中间件层共用的.
+
+- [客户端库](https://docs.ros.org/en/humble/Concepts/About-ROS-2-Client-Libraries.html)
+  包括rclcpp, rclpy包, 是建立在rcl和rosidl API基础上的面向用户的接口, 主要功能是创建节点, 执行发布者/订阅者等.
+
+- [组合(composition)](https://docs.ros.org/en/humble/Concepts/About-Composition.html)
+  多节点组合运行, 实现在单个进程中组合运行多个节点.
+
+## ROS2 Usage in Autoware.Universe
+
+最新的 Autoware.Universe 版本中所用到的 ROS2 功能整理. Universe的[核心代码仓库](https://github.com/autowarefoundation/autoware.universe)
+
+### ROS内部接口
+
+- rcutils 
+  用于错误处理, 命令行参数解析和日志记录
+  使用示例: [grid_map_ros](https://github.com/ANYbotics/grid_map/tree/master/grid_map_ros) 或者 [grid_map_pcl](https://github.com/ANYbotics/grid_map/tree/master/grid_map_pcl)
+  涉及的软件包: `rcutils`
+
+- rmw
+  AW主要用它来定义request的header和设置msg/srv的Qos. 
+  使用示例: [tier4_api_utils](https://github.com/autowarefoundation/autoware.universe/blob/main/common/tier4_api_utils/include/tier4_api_utils/rclcpp/proxy.hpp)
+  涉及的软件包: 涉及`rmw`软件包中的`rmw_request_id_t`, `rmw_qos_profile_services_defaul`, `rmw_qos_profile_sensor_data`, `rmw_qos_profile_t`等类型定义
+
+### ROS客户端库
+
+包括rclcpp, rclpy包, 是建立在rcl和rosidl API基础上的面向用户的接口, 主要功能是创建节点, 执行发布者/订阅者等.
+使用示例: 大部分节点都用到了rclcpp提供的用户接口.
+
+### ROS通信
+
+包括对已有msg/srv的使用, 自定义msg/srv/action类型的定义, 生成和使用.
+
+使用示例: [autoware_auto_planning_msgs](https://github.com/tier4/autoware_auto_msgs/tree/tier4/main/autoware_auto_planning_msgs)
+
+- 消息(msg)
+
+已有消息类型: 涉及`std_msgs`, `geometry_msgs`, `sensor_msgs`, `nav_msgs`, `can_msgs`, `visualization_msgs`, `unique_identifier_msgs`, `diagnostic_msgs`消息类型, 依赖软件包有`builtin_interfaces`, `message_filters`, `diagnostic_updater`等.
+自定义消息类型: 除了常规消息类型外, 还依赖rosidl API接口, 涉及软件包有`rosidl_default_generators`, `rosidl_default_runtime`, `rosidl_interface_packages`等.
+
+- 服务(srv)
+
+已有服务类型, 涉及`std_srvs`服务;
+
+自定义服务类型, 主要用的的就是`std_msgs/msg/Header.idl`
+
+- 动作(action)
+
+类似于srv的通信机制
+
+- rosbridge
+
+Rosbridge是一个可用于非ROS系统和ROS系统进行通信的功能包，非ROS的系统使用指定数据内容的基于JSON(或BSON)格式的网络请求(ROSBridge支持TCP、UDP、WebSocket三种网络通讯方式)来调用ROS的功能.
+使用示例: [web_controller](https://github.com/autowarefoundation/autoware.universe/tree/main/common/web_controller) 里有用到.
+
+### 运行管理
+
+节点管理(ros2 launch), 参数设置, 话题名称重映射等.
+
+### 常用组件
+
+- 坐标变换(tf)组件
+
+以一种随时间进行缓存的树形结构来维护各个坐标系之间的关系，并让用户可以在任何要求的时间点上在任何两个坐标系之间对点、向量等进行坐标变换.
+
+使用示例: 
+[behavior_velocity_planner](https://github.com/autowarefoundation/autoware.universe/tree/main/planning/behavior_velocity_planner) 
+或者 [probabilistic_occupancy_grid_map)](https://github.com/autowarefoundation/autoware.universe/tree/main/sensing/probabilistic_occupancy_grid_map)
+
+> 涉及的软件包: 
+> `tf2`, 坐标变换库;
+> `tf2_ros`, 为tf2提供roscpp和rospy绑定, 多用于对坐标变换进行侦听(listening)和广播(broadcasting);
+> `tf2_eigen`, 用于在本地处理Eigen数据类型的tf2方法，为C++软件包;
+> `tf2_geometry_msgs`, 用于在本地处理geometry_msgs数据类型的tf2方法;
+> `tf2_sensor_msgs`, 用于在本地处理sensor_msgs数据类型的tf2方法;
+
+- 地图组件
+
+使用示例: [lanelet2_extension](https://github.com/autowarefoundation/autoware_common/tree/main/tmp/lanelet2_extension)
+
+涉及的软件包: `lanelet2_{xxx}`, `visualization_msgs`, `nav2_costmap_2d`, `laser_geometry`, `message_filters`, 而其他地方要用到的octomap和gridmap则是外部包
+
+- 点云处理组件
+
+使用示例: [pointcloud_preprocessor](https://github.com/autowarefoundation/autoware.universe/tree/main/sensing/pointcloud_preprocessor)
+
+涉及的软件包: `pcl_ros`, `pcl_conversions`, `pcl_msgs`
+
+- 图像处理组件
+
+使用示例: [image_projection_based_fusion](https://github.com/autowarefoundation/autoware.universe/tree/main/perception/image_projection_based_fusion)
+
+涉及的软件包: `image_transport`
+
+- 其他调试辅助组件
+
+主要指ros2 bag, rviz2, rqt工具箱等.
+
+使用示例: 
+[tier4_planning_rviz_plugin](https://github.com/autowarefoundation/autoware.universe/tree/main/common/tier4_planning_rviz_plugin)
+或者 [grid_map_ros](https://github.com/ANYbotics/grid_map/tree/master/grid_map_ros)
+
+AW代码中涉及的软件包: `rviz2`, `rviz_common`, `rviz_default_plugins`, `rosbag2_cpp`, `rosbag2_storage`
+
+
+### ROS Composition(单进程启动多个节点)
+
+利用container process机制在单个进程中启动多个节点
+
+使用示例: [compare_map_segmentation](https://github.com/autowarefoundation/autoware.universe/tree/main/perception/compare_map_segmentation)
+
+涉及的软件包: `rclcpp_component`
+
+
+### 汇总表格
+
+| ROS2功能                | AW实际用到的ROS软件包                                        | 功能描述                                                     | AW中的使用示例                                               |
+| ----------------------- | ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| ROS内部接口             | `rcutils`, `rmw`                                             | 用于错误处理, 日志记录; 定义request的header和设置msg/srv的Qos | grid_map_pcl 和 tier4_api_utils                              |
+| ROS客户端库             | `rclcpp`, `rclpy`                                            | 建立在 rcl 和 rosidl 等ROS内部接口上的面向用户的接口         | 很多(anywhere)                                               |
+| ROS通信-消息(msg)       | 消息类型: `std_msgs`, `geometry_msgs`, `sensor_msgs`, `nav_msgs`, `can_msgs`, `visualization_msgs`, `unique_identifier_msgs`, `diagnostic_msgs`; 其他相关软件包: `builtin_interfaces`, `message_filters`, `diagnostic_updater` | 话题 (msg) 通信, Pub/Sub模式                                 | autoware_auto_planning_msgs                                  |
+| ROS通信-服务(srv)       | 服务类型: `std_srvs`; 其他相关软件包: `std_msgs`             | 服务 (srv) 通信, Service/Client模式                          | 同上                                                         |
+| ROS通信-动作(action)    | 以 msg 和 srv 为基础, 无特殊内容                             | 同 srv                                                       | 同上                                                         |
+| 常用组件-坐标变换(tf2)  | `tf2`, `tf2_ros`, `tf2_eigen`, `tf2_geometry_msgs`, `tf2_sensor_msgs` | 以一种随时间进行缓存的树形结构来维护各个坐标系之间的关系     | behavior_velocity_planner 或者 probabilistic_occupancy_grid_map |
+| 常用组件-高精地图 (map) | `lanelet2_{xxx}`, `visualization_msgs`, `nav2_costmap_2d`, `laser_geometry`, `message_filters` | 用于描述高精度地图                                           | lanelet2_extension 或者 probabilistic_occupancy_grid_map     |
+| 常用组件-点云处理       | `pcl_ros`, `pcl_conversions`, `pcl_msgs`                     | 提供点云处理功能                                             | pointcloud_preprocessor                                      |
+| 常用组件-图像处理       | `image_transport`                                            | 图像处理功能 (可替代)                                        | image_projection_based_fusion                                |
+| 常用组件-其他           | `rviz2`, `rviz_common`, `rviz_default_plugins`, `rosbag2_cpp`, `rosbag2_storage` | 主要指 rviz2 , ros2bag 和 rqt工具箱等功能                    | tier4_planning_rviz_plugin 或者 grid_map_ros                 |
+| 多节点单进程通信        | `rclcpp_component`                                           | 利用container机制在单个进程中启动多个节点                    | compare_map_segmentation                                     |
+
+
+
+
+# ROS2 usage in Autoware
+
+## ROS2
+
+[ROS2 Offical Documents](https://docs.ros.org/en/humble/Tutorials.html)
+
+Some basic concepts
+
+- [Node](https://docs.ros.org/en/humble/Tutorials/Beginner-CLI-Tools/Understanding-ROS2-Nodes/Understanding-ROS2-Nodes.html)
+  Node is a basic logical functional units, including pub/sub of topic, request/response of service, setting and delivery of parameters, etc.
+
+- [Internal-Interfaces](https://docs.ros.org/en/humble/Concepts/About-Internal-Interfaces.html)
+  The internal ROS interfaces are public C APIs that are intended for use by developers who are creating client libraries or adding a new underlying middleware, but are not intended for use by typical ROS users.
+
+  It mainly includes
+
+  > **rmw,** ROS middleware interface between ROS2 software stack and underlying middleware implementation. The underlying middleware can be a DDS implementation or an RTPS implementation, which is responsible for discovery, publish and subscribe mechanisms, service request-response mechanisms, and message type serialization. Providers of different middleware implementations must implement the rmw interface.
+  >
+  > **rcl**, the ROS client library interface. rcl is a higher-level API designed to provide a common implementation for various client libraries to use the more complex concepts and utilities of ROS, regardless of the underlying middleware used. That is, each client library does not directly touch the middleware implementation, but indirectly touch the middleware implementation through the ROS middleware interface (rmw API) abstraction.
+  >
+  > **rosidl**, the rosidl API consists of a few message related static functions and types along with a definition of what code should be generated by messages in different languages. 
+  >
+  > **rcutils**, the C API composed of macros, functions, and data structures used throughout the ROS2 codebase. These are mainly used for error handling, commandline argument parsing, and logging which are not specific to the client or middleware layers and can be shared by both.
+
+- [client libarary](https://docs.ros.org/en/humble/Concepts/About-ROS-2-Client-Libraries.html)
+  The ROS client library (based on `rcl` and `rosidl`) provides the APIs that most ROS users are familiar with, and may come in a variety of programming languages. The APIs allow users to implement their ROS code. 
+  Supported client libraries are `rclcpp` and `rclpy`, with function of creating nodes and constructing topic publisher/subscribers, etc.
+
+- [composition](https://docs.ros.org/en/humble/Concepts/About-Composition.html)
+  Used to realize the combined operation of multiple nodes in a single process.
+
+## ROS2 Usage in Autoware.Universe
+
+ROS2 usage in the latest Autoware.Universe version. Universe's [core code respository](https://github.com/autowarefoundation/autoware.universe)
+
+### ROS2 Internal-interfaces
+
+- rcutils 
+  rcutils is a C API used for error handling, commandline argument parsing, and logging. 
+
+  Example of use: [grid_map_ros](https://github.com/ANYbotics/grid_map/tree/master/grid_map_ros) or [grid_map_pcl](https://github.com/ANYbotics/grid_map/tree/master/grid_map_pcl)
+
+  Package involved: `rcutils`
+
+- rmw
+  autoware use it to define the request header and set the Qos of msgs/srvs. 
+
+  Example of use: [tier4_api_utils](https://github.com/autowarefoundation/autoware.universe/blob/main/common/tier4_api_utils/include/tier4_api_utils/rclcpp/proxy.hpp)
+
+  Packages involved: tpye definitions of "rmw_request_id_t", "rmw_qos_profile_services_defaul", "rmw_qos_profile_sensor_data", "rmw_qos_profile_t" in the `rmw` package
+
+
+### ROS2 Client Libraries
+
+Client libraries are the APIs based on `rcl` and `rosidl` that allow users to implement their ROS code. Using client libraries, users gain access to ROS concepts such as nodes, topics, services, etc.
+Example of use: most nodes use the interface provided by rclcpp.
+
+### ROS2 Communication
+
+Including the use of existing msg/srv and custom msg/srv/action types.
+
+Example of use: [autoware_auto_planning_msgs](https://github.com/tier4/autoware_auto_msgs/tree/tier4/main/autoware_auto_planning_msgs)
+
+- msg
+
+  existing msg types: `std_msgs`, `geometry_msgs`, `sensor_msgs`, `nav_msgs`, `can_msgs`, `visualization_msgs`, `unique_identifier_msgs`, `diagnostic_msgs`, and related dependent packages of `builtin_interfaces`, `message_filters`, `diagnostic_updater`.
+  custom msg types: In addition to the existing msg types, it also relies rosidl API interface. Packages involved are `rosidl_default_generators`, `rosidl_default_runtime`, `rosidl_interface_packages`.
+
+- srv
+
+  existing srv types: `std_srvs`;
+
+  custom srv types: the main one is `std_msgs/msg/Header.idl`.
+
+- action
+  similar to srv communication mechanism
+
+- rosbridge
+  a package that can be used for communication between non-ROS systems and ROS systems. Non-ROS systems use network requests based on JSON  format with specified data content (rosbridge supports TCP, UDP, and WebSocket three network communication methods) to call ROS functions.
+
+  Example of use: [web_controller](https://github.com/autowarefoundation/autoware.universe/tree/main/common/web_controller).
+
+### Launch management
+
+Node management (ros2 launch), parameter settings, topic name remapping, etc.
+
+### Common Components
+
+- TF2
+
+  tf2 is the transform library, which lets the user keep track of multiple coordinate frames over time. tf2 maintains the relationship between coordinate frames in a tree structure buffered over time and allows the user to transform points, vectors, etc. between any two coordinate frames at any desired point in time.
+
+  Example of use: [behavior_velocity_planner](https://github.com/autowarefoundation/autoware.universe/tree/main/planning/behavior_velocity_planner) or [probabilistic_occupancy_grid_map)](https://github.com/autowarefoundation/autoware.universe/tree/main/sensing/probabilistic_occupancy_grid_map)
+
+  Packages involved: 
+
+  > `tf2`, coordinate transformation library;
+  >
+  > `tf2_ros`, provides roscpp and rospy bindings for tf2, which are mostly used for listening and broadcasting of coordinate transformations;
+  >
+  > `tf2_eigen`, tf2 methods for natively handling Eigen data types, a C++ package;
+  >
+  > `tf2_geometry_msgs`, a tf2 method for handling the geometry_msgs data type locally;
+  >
+  > `tf2_sensor_msgs`, a tf2 method for handling the sensor_msgs data type locally.
+
+- Map
+
+  Example of use: [lanelet2_extension](https://github.com/autowarefoundation/autoware_common/tree/main/tmp/lanelet2_extension)
+
+  Packages involved: `lanelet2_{xxx}`, `visualization_msgs`, `nav2_costmap_2d`, `laser_geometry`, `message_filters`. The octomap and gridmap used elsewhere are external packages
+
+- Pointcloud Processing
+
+  Example of use: [pointcloud_preprocessor](https://github.com/autowarefoundation/autoware.universe/tree/main/sensing/pointcloud_preprocessor)
+
+  Packages involved: `pcl_ros`, `pcl_conversions`, `pcl_msgs`
+
+
+- Image Processing
+
+  Example of use: [image_projection_based_fusion](https://github.com/autowarefoundation/autoware.universe/tree/main/perception/image_projection_based_fusion)
+
+  Packages involved: `image_transport`
+
+- Other Auxiliary components
+
+  Mainly refers to ros2 bag, rviz2, rqt toolbox, etc.
+
+  Example of use: [tier4_planning_rviz_plugin](https://github.com/autowarefoundation/autoware.universe/tree/main/common/tier4_planning_rviz_plugin) or  [grid_map_ros](https://github.com/ANYbotics/grid_map/tree/master/grid_map_ros)
+
+Packages involved: `rviz2`, `rviz_common`, `rviz_default_plugins`, `rosbag2_cpp`, `rosbag2_storage`
+
+
+### ROS Composition
+
+Use the container process mechanism to launch multiple ros nodes in a single process.
+
+Example of use: [compare_map_segmentation](https://github.com/autowarefoundation/autoware.universe/tree/main/perception/compare_map_segmentation)
+
+Packages involved: `rclcpp_component`
+
+
+### Summary table
+
+| ROS2 Features             | ROS2 Packages used by Autoware                               | Feature Description                                          | Example of use in Autoware                                   |
+| ------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| internal interface        | `rcutils`, `rmw`                                             | error handling, logging; define request header and set msg/srv Qos | grid_map_pcl and tier4_api_utils                             |
+| client library            | `rclcpp`, `rclpy`                                            | APIs that allow users to implement their ROS code            | many places                                                  |
+| communication-msg         | `std_msgs`, `geometry_msgs`, `sensor_msgs`, `nav_msgs`, `can_msgs`, `visualization_msgs`, `unique_identifier_msgs`, `diagnostic_msgs`; `builtin_interfaces`, `message_filters`, `diagnostic_updater` | topic communication in Pub/Sub mod                           | autoware_auto_planning_msgs                                  |
+| communication-srv         | `std_srvs`; `std_msgs`                                       | srv communication in service/client mod                      | ditto                                                        |
+| communication-action      | Based on msg and srv, nothing special                        | similar to srv                                               | ditto                                                        |
+| components-tf2            | `tf2`, `tf2_ros`, `tf2_eigen`, `tf2_geometry_msgs`, `tf2_sensor_msgs` | transform library to keep track of multi TF over time        | behavior_velocity_planner or probabilistic_occupancy_grid_map |
+| components-map            | `lanelet2_{xxx}`, `visualization_msgs`, `nav2_costmap_2d`, `laser_geometry`, `message_filters` | used to describe HD map                                      | lanelet2_extension or probabilistic_occupancy_grid_map       |
+| components-pc processing  | `pcl_ros`, `pcl_conversions`, `pcl_msgs`                     | point cloud processing                                       | pointcloud_preprocessor                                      |
+| components-img processing | `image_transport`                                            | Image processing                                             | image_projection_based_fusion                                |
+| components-others         | `rviz2`, `rviz_common`, `rviz_default_plugins`, `rosbag2_cpp`, `rosbag2_storage` | components such as rviz2 , ros2bag and rqt toolbox           | tier4_planning_rviz_plugin or grid_map_ros                   |
+| multi-node single process | `rclcpp_component`                                           | multiple nodes in a single process                           | compare_map_segmentation                                     |
+
+
