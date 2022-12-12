@@ -38,14 +38,14 @@ nodes:
   - id: runtime-node
     operators:
       - id: voxel_grid_filter
-        shared-library: ../../target/debug/voxel_grid_filter
+        shared-library: ../../../target/debug/voxel_grid_filter
         inputs:
           pointcloud: rosbag_dummy/pointcloud
         outputs:
           - filted_pointcloud
     
       - id: ndt_localizer
-        shared-library: ../../target/debug/ndt_localizer
+        shared-library: ../../../target/debug/ndt_localizer
         inputs:
           initial_pose: pose_initializer/initial_pose
           map_points: map_loader/map_points

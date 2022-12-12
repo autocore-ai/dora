@@ -25,7 +25,7 @@ include_directories(
 )
 
 # add the directory where the static library is located
-string(REGEX REPLACE "(.+)/\\examples/ndt_localizer.*" "\\1" lib_path ${CMAKE_CURRENT_SOURCE_DIR})
+string(REGEX REPLACE "(.+)/\\examples/autoware-dataflow/ndt_localizer.*" "\\1" lib_path ${CMAKE_CURRENT_SOURCE_DIR})
 link_directories(${lib_path}/target/debug)
 
 # ament_auto_add_library(${PROJECT_NAME}_native SHARED 

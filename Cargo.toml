@@ -10,8 +10,8 @@ members = [
     "binaries/*",
     "examples/rust-dataflow/*",
     "examples/iceoryx/*",
-    "examples/ndt_localizer/src/voxel_grid_filter",
-    "examples/ndt_localizer/src/ndt_localizer",
+    "examples/autoware-dataflow/ndt_localizer/src/voxel_grid_filter",
+    "examples/autoware-dataflow/ndt_localizer/src/ndt_localizer",
     "libraries/communication-layer/*",
     "libraries/core",
     "libraries/message",
@@ -58,4 +58,4 @@ path = "examples/iceoryx/run.rs"
 
 [[example]]
 name = "ndt-dataflow"
-path = "examples/ndt_localizer/run.rs"
+path = "examples/autoware-dataflow/ndt_localizer/run.rs"

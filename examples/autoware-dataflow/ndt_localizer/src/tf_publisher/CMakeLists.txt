@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(pose_initializer)
+project(tf_publisher)
 
 set(CMAKE_BUILD_TYPE "Release")
 set(CMAKE_CXX_FLAGS "-std=c++17 -pthread")
@@ -15,25 +15,25 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules/find_cereal.cmake)
 find_package (ament_cmake_auto REQUIRED)
 ament_auto_find_build_dependencies()
 
-# find_package(PCL REQUIRED)
-# find_package(Eigen3 REQUIRED)
+find_package(PCL REQUIRED)
+find_package(Eigen3 REQUIRED)
 
 include_directories(
     ${CEREAL_DIRS}
-    # ${PCL_INCLUDE_DIRS}
-    # ${EIGEN3_INCLUDE_DIR}
+    ${PCL_INCLUDE_DIRS}
+    ${EIGEN3_INCLUDE_DIR}
 )
 
 # add the directory where the static library is located
-string(REGEX REPLACE "(.+)/\\examples/ndt_localizer.*" "\\1" lib_path ${CMAKE_CURRENT_SOURCE_DIR})
+string(REGEX REPLACE "(.+)/\\examples/autoware-dataflow/ndt_localizer.*" "\\1" lib_path ${CMAKE_CURRENT_SOURCE_DIR})
 link_directories(${lib_path}/target/debug)
 
 # ament_auto_add_library(${PROJECT_NAME}_native SHARED 
-#     src/pose_initializer.cpp
+#     src/tf_publisher.cpp
 #     src/lib.rs.cc
 # )
 ament_auto_add_executable(${PROJECT_NAME}_native
-    src/pose_initializer.cpp
+    src/tf_publisher.cpp
     src/lib.rs.cc
 )
 
@@ -41,7 +41,7 @@ ament_auto_add_executable(${PROJECT_NAME}_native
 # add_dependencies(${PROJECT_NAME} xxx_lib)
 
 target_link_libraries(${PROJECT_NAME}_native
-    # ${PCL_LIBRARIES}
+    ${PCL_LIBRARIES}
     dora_node_api_cxx -lrt
     dl
 )
