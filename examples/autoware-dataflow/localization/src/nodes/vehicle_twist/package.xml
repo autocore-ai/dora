@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<package format="3">
+    <name>vehicle_twist</name>
+    <version>0.1.0</version>
+    <description>vehicle_twist package</description>
+    <maintainer email="carl.liu@autocore.ai">carl liu</maintainer>
+    <license>BSD</license>
+
+    <buildtool_depend>ament_cmake_auto</buildtool_depend>
+    
+    <build_depend>autoware_cmake</build_depend>
+
+    <build_depend>geometry_msgs</build_depend>
+    <build_depend>cereal_ros_msgs</build_depend>
+    <build_depend>time_utils</build_depend>
+
+    <!-- The export tag contains other, unspecified, tags -->
+    <export>
+        <build_type>ament_cmake</build_type>
+    </export>
+</package>

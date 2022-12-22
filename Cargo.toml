@@ -12,6 +12,15 @@ members = [
     "examples/iceoryx/*",
     "examples/autoware-dataflow/ndt_localizer/src/voxel_grid_filter",
     "examples/autoware-dataflow/ndt_localizer/src/ndt_localizer",
+    "examples/autoware-dataflow/localization/src/operators/imu_corrector",
+    "examples/autoware-dataflow/localization/src/operators/gnss_poser",
+    "examples/autoware-dataflow/localization/src/operators/map_height_fitter",
+    "examples/autoware-dataflow/localization/src/operators/pose_initializer",
+    "examples/autoware-dataflow/localization/src/operators/pointcloud_downsample",
+    "examples/autoware-dataflow/localization/src/operators/ndt_scan_matcher",
+    "examples/autoware-dataflow/localization/src/operators/gyro_odometer",
+    "examples/autoware-dataflow/localization/src/operators/ekf_localizer",
+    "examples/autoware-dataflow/localization/src/operators/stop_filter",
     "libraries/communication-layer/*",
     "libraries/core",
     "libraries/message",
@@ -59,3 +68,7 @@ path = "examples/iceoryx/run.rs"
 [[example]]
 name = "ndt-dataflow"
 path = "examples/autoware-dataflow/ndt_localizer/run.rs"
+
+[[example]]
+name = "localization-dataflow"
+path = "examples/autoware-dataflow/localization/run.rs"

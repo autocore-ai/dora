@@ -1162,6 +1162,20 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e78d4f1cc4ae33bbfc157ed5d5a5ef3bc29227303d595861deb238fcec4e9457"
 
 [[package]]
+name = "ekf_localizer"
+version = "0.1.0"
+dependencies = [
+ "cxx",
+ "cxx-build",
+ "dora-operator-api",
+ "dunce",
+ "eyre",
+ "futures",
+ "rand",
+ "tokio",
+]
+
+[[package]]
 name = "encoding_rs"
 version = "0.8.31"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1501,6 +1515,34 @@ dependencies = [
 ]
 
 [[package]]
+name = "gnss_poser"
+version = "0.1.0"
+dependencies = [
+ "cxx",
+ "cxx-build",
+ "dora-operator-api",
+ "dunce",
+ "eyre",
+ "futures",
+ "rand",
+ "tokio",
+]
+
+[[package]]
+name = "gyro_odometer"
+version = "0.1.0"
+dependencies = [
+ "cxx",
+ "cxx-build",
+ "dora-operator-api",
+ "dunce",
+ "eyre",
+ "futures",
+ "rand",
+ "tokio",
+]
+
+[[package]]
 name = "h2"
 version = "0.3.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1723,6 +1765,20 @@ dependencies = [
  "matches",
  "unicode-bidi",
  "unicode-normalization",
+]
+
+[[package]]
+name = "imu_corrector"
+version = "0.1.0"
+dependencies = [
+ "cxx",
+ "cxx-build",
+ "dora-operator-api",
+ "dunce",
+ "eyre",
+ "futures",
+ "rand",
+ "tokio",
 ]
 
 [[package]]
@@ -1979,6 +2035,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "map_height_fitter"
+version = "0.1.0"
+dependencies = [
+ "cxx",
+ "cxx-build",
+ "dora-operator-api",
+ "dunce",
+ "eyre",
+ "futures",
+ "rand",
+ "tokio",
+]
+
+[[package]]
 name = "maplit"
 version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2228,6 +2298,20 @@ dependencies = [
 
 [[package]]
 name = "ndt_localizer"
+version = "0.1.0"
+dependencies = [
+ "cxx",
+ "cxx-build",
+ "dora-operator-api",
+ "dunce",
+ "eyre",
+ "futures",
+ "rand",
+ "tokio",
+]
+
+[[package]]
+name = "ndt_scan_matcher"
 version = "0.1.0"
 dependencies = [
  "cxx",
@@ -2808,6 +2892,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "pointcloud_downsample"
+version = "0.1.0"
+dependencies = [
+ "cxx",
+ "cxx-build",
+ "dora-operator-api",
+ "dunce",
+ "eyre",
+ "futures",
+ "rand",
+ "tokio",
+]
+
+[[package]]
 name = "polling"
 version = "2.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2818,6 +2916,20 @@ dependencies = [
  "log",
  "wepoll-ffi",
  "winapi",
+]
+
+[[package]]
+name = "pose_initializer"
+version = "0.1.0"
+dependencies = [
+ "cxx",
+ "cxx-build",
+ "dora-operator-api",
+ "dunce",
+ "eyre",
+ "futures",
+ "rand",
+ "tokio",
 ]
 
 [[package]]
@@ -3685,6 +3797,20 @@ dependencies = [
  "cfg-if",
  "futures-core",
  "pin-project-lite",
+]
+
+[[package]]
+name = "stop_filter"
+version = "0.1.0"
+dependencies = [
+ "cxx",
+ "cxx-build",
+ "dora-operator-api",
+ "dunce",
+ "eyre",
+ "futures",
+ "rand",
+ "tokio",
 ]
 
 [[package]]

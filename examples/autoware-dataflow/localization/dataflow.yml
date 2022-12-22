@@ -1,0 +1,142 @@
+communication:
+  zenoh:
+    prefix: /localization-dataflow
+
+nodes:
+  # - id: pointcloud_map_loader
+  #   custom:
+  #     source: install/pointcloud_map_loader/lib/pointcloud_map_loader/pointcloud_map_loader_native
+  #     inputs:
+  #       tick: dora/timer/millis/5000
+  #     outputs:
+  #       - map_points
+  
+  - id: rosbag_dummy
+    custom:
+      source: install/rosbag_dummy/lib/rosbag_dummy/rosbag_dummy_native
+      inputs:
+        tick: dora/timer/millis/1000
+      outputs:
+        - raw_pointcloud
+
+  - id: manual_pose
+    custom:
+      source: install/manual_pose/lib/manual_pose/manual_pose_native
+      inputs:
+        tick: dora/timer/millis/5000
+      outputs:
+        - initial_pose
+
+  # - id: gnss_imu_dummy
+  #   custom:
+  #     source: install/gnss_imu_dummy/lib/gnss_imu_dummy/gnss_imu_dummy_native
+  #     inputs:
+  #       tick: dora/timer/millis/1000
+  #     outputs:
+  #       - imu_raw
+  #       - nav_sat_fix
+  #       - orientation
+
+  # - id: tf_publisher
+  #   custom:
+  #     source: install/tf_publisher/lib/tf_publisher/tf_publisher_native
+  #     inputs:
+  #       tick: dora/timer/millis/1000
+  #     outputs:
+  #       - tf_baselink2lidar
+  #       - tf_baselink2imu
+  #       - tf_gnssantenna2baselink
+
+  # - id: vehicle_twist
+  #   custom:
+  #     source: install/vehicle_twist/lib/vehicle_twist/vehicle_twist_native
+  #     inputs:
+  #       tick: dora/timer/millis/1000
+  #     outputs:
+  #       - twist_with_cov
+
+  - id: runtime-node
+    operators:
+      # - id: imu_corrector
+      #   shared-library: ../../target/debug/imu_corrector
+      #   inputs:
+      #     imu_raw: gnss_imu_dummy/imu_raw
+      #   outputs:
+      #     - imu_data
+
+      # - id: gnss_poser
+      #   shared-library: ../../target/debug/gnss_poser
+      #   inputs:
+      #     tf_gnssantenna2baselink: tf_publisher/tf_gnssantenna2baselink
+      #     nav_sat_fix: gnss_imu_dummy/nav_sat_fix
+      #     orientation: gnss_imu_dummy/orientation
+      #   outputs:
+      #     - gnss_pose_cov
+      
+      # - id: map_height_fitter
+      #   shared-library: ../../target/debug/map_height_fitter
+      #   inputs:
+      #     map_points: pointcloud_map_loader/map_points
+      #     gnss_pose: runtime-node/gnss_poser/gnss_pose_cov
+      #   outputs:
+      #     - fitted_gnss_pose
+
+      - id: pose_initializer
+        shared-library: ../../target/debug/pose_initializer
+        inputs:
+          manual_pose: manual_pose/initial_pose
+          fitted_gnss_pose: runtime-node/map_height_fitter/fitted_gnss_pose
+          aligned_response_pose: runtime-node/ndt_scan_matcher/aligned_response_pose
+        outputs:
+          - align_request_pose
+          - initialpose3d
+      
+      - id: pointcloud_downsample
+        shared-library: ../../target/debug/pointcloud_downsample
+        inputs:
+          raw_pointcloud: rosbag_dummy/raw_pointcloud
+        outputs:
+          - downsampled_pointcloud
+
+      # - id: ndt_scan_matcher
+      #   shared-library: ../../target/debug/ndt_scan_matcher
+      #   inputs:
+      #     map_points: pointcloud_map_loader/map_points
+      #     align_request_pose: runtime-node/pose_initializer/align_request_pose
+      #     downsampled_pointcloud: runtime-node/pointcloud_downsample/downsampled_pointcloud
+      #     regularization_pose: runtime-node/gnss_poser/gnss_pose_cov
+      #     initial_pose: runtime-node/ekf_localizer/ekf_biased_pose_with_cov
+      #     tf_baselink2lidar: tf_publisher/tf_baselink2lidar
+      #   outputs:
+      #     - ndt_pose_with_cov
+      #     - aligned_response_pose
+
+      # - id: gyro_odometer
+      #   shared-library: ../../target/debug/gyro_odometer
+      #   inputs:
+      #     vehicle_twist: vehicle_twist/twist_with_cov
+      #     imu: runtime-node/imu_corrector/imu_data
+      #     tf_baselink2imu: tf_publisher/tf_baselink2imu
+      #   outputs:
+      #     - twist_with_cov
+
+      # - id: ekf_localizer
+      #   shared-library: ../../target/debug/ekf_localizer
+      #   inputs:
+      #     tick: dora/timer/millis/20
+      #     initial_pose: runtime-node/pose_initializer/initialpose3d
+      #     ndt_pose_with_cov: runtime-node/ndt_scan_matcher/ndt_pose_with_cov
+      #     twist_with_cov: runtime-node/gyro_odometer/twist_with_cov
+      #   outputs:
+      #     - kinematic_state
+      #     - ekf_pose_with_cov
+      #     - ekf_biased_pose_with_cov
+      #     - ekf_twist_with_cov
+      #     - tf_map2baselink
+
+      # - id: stop_filter
+      #   shared-library: ../../target/debug/stop_filter
+      #   inputs:
+      #     kinematic: runtime-node/ekf_localizer/kinematic_state
+      #   outputs:
+      #     - kinematic_state
