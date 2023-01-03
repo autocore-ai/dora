@@ -109,12 +109,12 @@ int main()
     }
     // std::cout << "TF_publisher node received input " << std::string(input.id) << std::endl;
 
-    while (true) {
+    for (int i = 0; i < 2; i++) {
         // publisher the transform.
         auto baselink2lidar_ptr = get_tf_baselink2lidar();
         auto baselink2imu_ptr = get_tf_baselink2imu();        
         auto gnssantenna2baselink_ptr = get_tf_gnssantenna2baselink();
-
+        
         // seralize the msg to raw data (e.g. [u8] or Vec<u8>) as following
         std::stringstream ss; // any(in/out) stream can be used
         {

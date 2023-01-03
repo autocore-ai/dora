@@ -63,17 +63,19 @@ void GyroOdometer::callbackTwistWithCovariance(
   // TODO(YamatoAndo) trans from twist_with_cov_msg_ptr->header to base_frame
   twist_with_cov_msg_ptr_ = twist_with_cov_msg_ptr;
 
+  /*
   if (!imu_msg_ptr_) {
     std::cerr << "Imu msg is not subscribed" << std::endl;
     return;
   }
 
-  const double imu_dt = std::abs(std::chrono::duration_cast<std::chrono::seconds>(
-    std::chrono::system_clock::now() - time_utils::from_message(imu_msg_ptr_->header.stamp)).count());
+  const double imu_dt = std::abs(std::chrono::duration_cast<std::chrono::milliseconds>(
+    std::chrono::system_clock::now() - time_utils::from_message(imu_msg_ptr_->header.stamp)).count()) / 1000.0;
   if (imu_dt > message_timeout_sec_) {
-    std::cerr << "Imu msg is timeout. imu_dt: "<< imu_dt << "[sec], tolerance" << message_timeout_sec_ << "[sec]" << std::endl;
+    std::cerr << "Imu msg is timeout. imu_dt: "<< imu_dt << "[sec], tolerance " << message_timeout_sec_ << "[sec]" << std::endl;
     return;
   }
+  */
 }
 
 void GyroOdometer::callback_tf_baselink2imu(geometry_msgs::msg::TransformStamped::ConstSharedPtr & TF_msg_ptr)
@@ -89,12 +91,14 @@ void GyroOdometer::callbackImu(const sensor_msgs::msg::Imu::ConstSharedPtr imu_m
     return;
   }
 
-  const double twist_dt = std::abs(std::chrono::duration_cast<std::chrono::seconds>(
-    std::chrono::system_clock::now() - time_utils::from_message(twist_with_cov_msg_ptr_->header.stamp)).count());
+  /*
+  const double twist_dt = std::abs(std::chrono::duration_cast<std::chrono::milliseconds>(
+    std::chrono::system_clock::now() - time_utils::from_message(twist_with_cov_msg_ptr_->header.stamp)).count()) / 1000.0;
   if (twist_dt > message_timeout_sec_) {
-    std::cerr << "Twist msg is timeout. twist_dt: "<< twist_dt << "[sec], tolerance" << message_timeout_sec_ << "[sec]" << std::endl;
+    std::cerr << "Twist msg is timeout. twist_dt: "<< twist_dt << "[sec], tolerance " << message_timeout_sec_ << "[sec]" << std::endl;
     return;
   }
+  */
 
   if (!TF_baselink2imu_ptr_) {
     std::cout << "transform from baselink to imu is empty, waiting for this message..." << std::endl;

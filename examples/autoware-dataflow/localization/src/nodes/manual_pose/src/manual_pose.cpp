@@ -47,7 +47,6 @@ int main()
     // std::cout << "manual_pose node received input " << std::string(input.id) << std::endl;
 
     // construct initial pose
-    geometry_msgs::msg::PoseWithCovarianceStamped init_pose_msg;
     std::array<double, 36> pose_covariance {
         1.0, 0.0, 0.0,  0.0,  0.0,  0.0,
         0.0, 1.0, 0.0,  0.0,  0.0,  0.0,
@@ -56,22 +55,23 @@ int main()
         0.0, 0.0, 0.0,  0.0,  0.01, 0.0,
         0.0, 0.0, 0.0,  0.0,  0.0,  0.2,
     };
-    // geometry_msgs::msg::Vector3 xyz(-6.865, -1.326, 0.0);
-    // geometry_msgs::msg::Vector3 rpy(0.0, 0.0, -175.0);    // the corresponding quaternion xyzw (0.0, 0.0, -0.999, 0.043)
+    // geometry_msgs::msg::Vector3 xyz(-6.865, -1.397, -1.906);
+    // geometry_msgs::msg::Vector3 rpy(0.0, 0.0, -165.0);    // the corresponding quaternion xyzw (0.0, 0.0, -0.992, 0.125)
     tf2::Quaternion tf_quaternion;
-    tf_quaternion.setRPY(0.0, 0.0, -175.0);
+    tf_quaternion.setRPY(0.0, 0.0, -165.0);
+    geometry_msgs::msg::PoseWithCovarianceStamped init_pose_msg;
 
-    init_pose_msg.header.frame_id = "map";
-    init_pose_msg.header.stamp = time_utils::to_message(std::chrono::system_clock::now());
-    init_pose_msg.pose.pose.position.x = -0.865;
-    init_pose_msg.pose.pose.position.y = -1.326;
-    init_pose_msg.pose.pose.position.z = 0.0;
-    init_pose_msg.pose.pose.orientation = tf2::toMsg(tf_quaternion);
-    init_pose_msg.pose.covariance = pose_covariance;
+    // for (int i = 0; i < 2; i++) {
+        init_pose_msg.header.frame_id = "map";
+        init_pose_msg.header.stamp = time_utils::to_message(std::chrono::system_clock::now());
+        init_pose_msg.pose.pose.position.x = -6.865;
+        init_pose_msg.pose.pose.position.y = -1.397;
+        init_pose_msg.pose.pose.position.z = -1.906;
+        init_pose_msg.pose.pose.orientation = tf2::toMsg(tf_quaternion);
+        init_pose_msg.pose.covariance = pose_covariance;
 
-    auto init_pose_ptr = std::make_shared<const geometry_msgs::msg::PoseWithCovarianceStamped>(init_pose_msg);
+        auto init_pose_ptr = std::make_shared<const geometry_msgs::msg::PoseWithCovarianceStamped>(init_pose_msg);
     
-    for (int i = 0; i < 2; i++) {
         // seralize the msg to raw data (e.g. [u8] or Vec<u8>) as following
         std::stringstream ss; // any(in/out) stream can be used
         {
@@ -90,6 +90,6 @@ int main()
             std::cerr << "Error: " << error << std::endl;
             return -1;
         }
-    }
+    // }
     return 0;
 }

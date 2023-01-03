@@ -47,22 +47,23 @@ int main()
     double stddev_wz_ = 0.1;    // [rad/s]
     geometry_msgs::msg::TwistWithCovarianceStamped twist_with_covariance_msg;
 
-    twist_with_covariance_msg.header.frame_id = "base_link";
-    twist_with_covariance_msg.header.stamp = time_utils::to_message(std::chrono::system_clock::now());
-
-    twist_with_covariance_msg.twist.twist.linear.x = 0.0;
-    twist_with_covariance_msg.twist.twist.linear.y = 0.0;
-    twist_with_covariance_msg.twist.twist.angular.z = 0.0;
-    twist_with_covariance_msg.twist.covariance[0 + 0 * 6] = stddev_vx_ * stddev_vx_;
-    twist_with_covariance_msg.twist.covariance[1 + 1 * 6] = 10000.0;
-    twist_with_covariance_msg.twist.covariance[2 + 2 * 6] = 10000.0;
-    twist_with_covariance_msg.twist.covariance[3 + 3 * 6] = 10000.0;
-    twist_with_covariance_msg.twist.covariance[4 + 4 * 6] = 10000.0;
-    twist_with_covariance_msg.twist.covariance[5 + 5 * 6] = stddev_wz_ * stddev_wz_;
-
-    auto twist_with_covariance_ptr = std::make_shared<const geometry_msgs::msg::TwistWithCovarianceStamped>(twist_with_covariance_msg);
-    
     while (true) {
+        twist_with_covariance_msg.header.frame_id = "base_link";
+        twist_with_covariance_msg.header.stamp = time_utils::to_message(std::chrono::system_clock::now());
+
+        twist_with_covariance_msg.twist.twist.linear.x = 0.0;
+        twist_with_covariance_msg.twist.twist.linear.y = 0.0;
+        twist_with_covariance_msg.twist.twist.angular.z = 0.0;
+        twist_with_covariance_msg.twist.covariance[0 + 0 * 6] = stddev_vx_ * stddev_vx_;
+        twist_with_covariance_msg.twist.covariance[1 + 1 * 6] = 10000.0;
+        twist_with_covariance_msg.twist.covariance[2 + 2 * 6] = 10000.0;
+        twist_with_covariance_msg.twist.covariance[3 + 3 * 6] = 10000.0;
+        twist_with_covariance_msg.twist.covariance[4 + 4 * 6] = 10000.0;
+        twist_with_covariance_msg.twist.covariance[5 + 5 * 6] = stddev_wz_ * stddev_wz_;
+    
+        auto twist_with_covariance_ptr = std::make_shared<const geometry_msgs::msg::TwistWithCovarianceStamped>(
+            twist_with_covariance_msg);
+        
         // seralize the msg to raw data (e.g. [u8] or Vec<u8>) as following
         std::stringstream ss; // any(in/out) stream can be used
         {

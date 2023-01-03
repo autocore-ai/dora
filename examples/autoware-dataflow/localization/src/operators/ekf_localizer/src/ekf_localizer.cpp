@@ -120,8 +120,8 @@ void EKFLocalizer::updatePredictFrequency()
     if (std::chrono::system_clock::now() < *last_predict_time_) {
       std::cout << "Detected jump back in time" << std::endl;
     } else {
-      const double elapsed = std::chrono::duration_cast<std::chrono::seconds>(
-        std::chrono::system_clock::now() - *last_predict_time_).count();
+      const double elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::system_clock::now() - *last_predict_time_).count() / 1000.0;
       ekf_rate_ = 1.0 / elapsed;
       DEBUG_INFO("[EKF] update ekf_rate_ to %f hz", ekf_rate_);
       ekf_dt_ = 1.0 / std::max(ekf_rate_, 0.1);
@@ -141,6 +141,7 @@ void EKFLocalizer::updatePredictFrequency()
  */
 void EKFLocalizer::timerCallback()
 {
+  is_ekf_result_set_ = false;
   if (!is_initialized_) {
     return;
   }
@@ -227,6 +228,7 @@ void EKFLocalizer::timerCallback()
 
   /* set ekf result */
   setEstimateResult();
+  is_ekf_result_set_ = true;
 }
 
 void EKFLocalizer::showCurrentX()
@@ -412,8 +414,8 @@ void EKFLocalizer::measurementUpdatePose(const geometry_msgs::msg::PoseWithCovar
   constexpr int dim_y = 3;  // pos_x, pos_y, yaw, depending on Pose output
   const auto t_curr = std::chrono::system_clock::now();
   /* Calculate delay step */
-  double delay_time = std::chrono::duration_cast<std::chrono::seconds>(
-    t_curr - time_utils::from_message(pose.header.stamp)).count() + pose_additional_delay_;
+  double delay_time = std::chrono::duration_cast<std::chrono::milliseconds>(
+    t_curr - time_utils::from_message(pose.header.stamp)).count()/1000.0 + pose_additional_delay_;
   
   if (delay_time < 0.0) {
     // std::cerr << "Pose time stamp is inappropriate (delay = " << delay_time << "[s]), set delay to 0[s]." << std::endl;
@@ -490,8 +492,8 @@ void EKFLocalizer::measurementUpdateTwist(
   constexpr int dim_y = 2;  // vx, wz
   const auto t_curr = std::chrono::system_clock::now();
   /* Calculate delay step */
-  double delay_time = std::chrono::duration_cast<std::chrono::seconds>(
-    t_curr - time_utils::from_message(twist.header.stamp)).count() + twist_additional_delay_;
+  double delay_time = std::chrono::duration_cast<std::chrono::milliseconds>(
+    t_curr - time_utils::from_message(twist.header.stamp)).count()/1000.0 + twist_additional_delay_;
   
   if (delay_time < 0.0) {
     // std::cerr << "Twist time stamp is inappropriate (delay = " << delay_time << " [s]), set delay to 0[s]." << std::endl;
@@ -673,70 +675,72 @@ OnInputResult on_input(EKFLocalizer &op, rust::Str id, rust::Slice<const uint8_t
       iarchive(twist_cov_ptr);
     }
     op.callbackTwistWithCovariance(twist_cov_ptr);
-  }
-  else {
+  } else {
     // timer trigger: TF and pose share a time trigger
-    // pose_with_covariance
-    ss.clear();
-    {
-      cereal::PortableBinaryOutputArchive oarchive(ss);
-      oarchive(op.get_pose_with_cov_msg_ptr());
-    }
-    std::string str = ss.str();
-    auto uchar = std::vector<unsigned char>(str.data(), str.data()+str.size()+1);
-    rust::Slice<const uint8_t> out_slice_pose_cov{uchar.data(), uchar.size()};
-    auto send_result_pose_cov = send_output(output_sender, rust::Str("ekf_pose_with_cov"), out_slice_pose_cov);
-    OnInputResult result_pose_cov = {send_result_pose_cov.error, false};
+    op.timerCallback();
+    op.timerTFCallback();
+    if(op.is_ekf_result_set()){
+      // pose_with_covariance
+      ss.clear();
+      {
+        cereal::PortableBinaryOutputArchive oarchive(ss);
+        oarchive(op.get_pose_with_cov_msg_ptr());
+      }
+      std::string str = ss.str();
+      auto uchar = std::vector<unsigned char>(str.data(), str.data()+str.size()+1);
+      rust::Slice<const uint8_t> out_slice_pose_cov{uchar.data(), uchar.size()};
+      auto send_result_pose_cov = send_output(output_sender, rust::Str("ekf_pose_with_cov"), out_slice_pose_cov);
+      OnInputResult result_pose_cov = {send_result_pose_cov.error, false};
 
-    // twist_with_covariance
-    ss.clear();
-    {
-      cereal::PortableBinaryOutputArchive oarchive(ss);
-      oarchive(op.get_twist_with_cov_msg_ptr());
-    }
-    str = ss.str();
-    uchar = std::vector<unsigned char>(str.data(), str.data()+str.size()+1);
-    rust::Slice<const uint8_t> out_slice_twist_cov{uchar.data(), uchar.size()};
-    auto send_result_twist_cov = send_output(output_sender, rust::Str("ekf_twist_with_cov"), out_slice_twist_cov);
-    OnInputResult result_twist_cov = {send_result_twist_cov.error, false};
+      // twist_with_covariance
+      ss.clear();
+      {
+        cereal::PortableBinaryOutputArchive oarchive(ss);
+        oarchive(op.get_twist_with_cov_msg_ptr());
+      }
+      str = ss.str();
+      uchar = std::vector<unsigned char>(str.data(), str.data()+str.size()+1);
+      rust::Slice<const uint8_t> out_slice_twist_cov{uchar.data(), uchar.size()};
+      auto send_result_twist_cov = send_output(output_sender, rust::Str("ekf_twist_with_cov"), out_slice_twist_cov);
+      OnInputResult result_twist_cov = {send_result_twist_cov.error, false};
 
-    // biased_pose_with_covariance
-    ss.clear();
-    {
-      cereal::PortableBinaryOutputArchive oarchive(ss);
-      oarchive(op.get_biased_pose_with_cov_msg_ptr());
-    }
-    str = ss.str();
-    uchar = std::vector<unsigned char>(str.data(), str.data()+str.size()+1);
-    rust::Slice<const uint8_t> out_slice_biased_pose_cov{uchar.data(), uchar.size()};
-    auto send_result_biased_pose_cov = send_output(output_sender, rust::Str("ekf_biased_pose_with_cov"), out_slice_biased_pose_cov);
-    OnInputResult result_biased_pose_cov = {send_result_biased_pose_cov.error, false};
+      // biased_pose_with_covariance
+      ss.clear();
+      {
+        cereal::PortableBinaryOutputArchive oarchive(ss);
+        oarchive(op.get_biased_pose_with_cov_msg_ptr());
+      }
+      str = ss.str();
+      uchar = std::vector<unsigned char>(str.data(), str.data()+str.size()+1);
+      rust::Slice<const uint8_t> out_slice_biased_pose_cov{uchar.data(), uchar.size()};
+      auto send_result_biased_pose_cov = send_output(output_sender, rust::Str("ekf_biased_pose_with_cov"), out_slice_biased_pose_cov);
+      OnInputResult result_biased_pose_cov = {send_result_biased_pose_cov.error, false};
 
-    // kinematic state
-    ss.clear();
-    {
-      cereal::PortableBinaryOutputArchive oarchive(ss);
-      oarchive(op.get_kinematic_msg_ptr());
-    }
-    str = ss.str();
-    uchar = std::vector<unsigned char>(str.data(), str.data()+str.size()+1);
-    rust::Slice<const uint8_t> out_slice_kinematic{uchar.data(), uchar.size()};
-    auto send_result_kinematic = send_output(output_sender, rust::Str("tf_map2baselink"), out_slice_kinematic);
-    OnInputResult result_kinematic = {send_result_kinematic.error, false};
+      // kinematic state
+      ss.clear();
+      {
+        cereal::PortableBinaryOutputArchive oarchive(ss);
+        oarchive(op.get_kinematic_msg_ptr());
+      }
+      str = ss.str();
+      uchar = std::vector<unsigned char>(str.data(), str.data()+str.size()+1);
+      rust::Slice<const uint8_t> out_slice_kinematic{uchar.data(), uchar.size()};
+      auto send_result_kinematic = send_output(output_sender, rust::Str("tf_map2baselink"), out_slice_kinematic);
+      OnInputResult result_kinematic = {send_result_kinematic.error, false};
 
-    // TF map2baselink
-    ss.clear();
-    {
-      cereal::PortableBinaryOutputArchive oarchive(ss);
-      oarchive(op.get_TF_map2baselink_msg_ptr());
+      // TF map2baselink
+      ss.clear();
+      {
+        cereal::PortableBinaryOutputArchive oarchive(ss);
+        oarchive(op.get_TF_map2baselink_msg_ptr());
+      }
+      str = ss.str();
+      uchar = std::vector<unsigned char>(str.data(), str.data()+str.size()+1);
+      rust::Slice<const uint8_t> out_slice_tf_map2baselink{uchar.data(), uchar.size()};
+      auto send_result_tf_map2baselink = send_output(output_sender, rust::Str("tf_map2baselink"), out_slice_tf_map2baselink);
+      OnInputResult result_tf_map2baselink = {send_result_tf_map2baselink.error, false};
+      return result_tf_map2baselink;
     }
-    str = ss.str();
-    uchar = std::vector<unsigned char>(str.data(), str.data()+str.size()+1);
-    rust::Slice<const uint8_t> out_slice_tf_map2baselink{uchar.data(), uchar.size()};
-    auto send_result_tf_map2baselink = send_output(output_sender, rust::Str("tf_map2baselink"), out_slice_tf_map2baselink);
-    OnInputResult result_tf_map2baselink = {send_result_tf_map2baselink.error, false};
-    return result_tf_map2baselink;
-    
   }
   // Set the default return
   return OnInputResult{rust::String(""), false};

@@ -83,28 +83,27 @@ int main()
     }
     // std::cout << "pointcloud_map_loader node received input " << std::string(input.id) << std::endl;
     
-    while (true) {
-    // for (int i = 0; i < 2; i++) {
-        // load pcd
-        std::string map_path_or_dir = fs::absolute("src/nodes/pointcloud_map_loader/map").string();
-        std::vector<std::string> pcd_paths{};
-        if (!fs::exists(map_path_or_dir)) {
-            std::cerr<<"invalid map path: " << map_path_or_dir <<std::endl;
-        }
-        if (isPcdFile(map_path_or_dir)) {
-            pcd_paths.push_back(map_path_or_dir);
-        }
-        if (fs::is_directory(map_path_or_dir)) {
-            for (const auto & file : fs::directory_iterator(map_path_or_dir)) {
-                const auto filename = file.path().string();
-                if (isPcdFile(filename)) {
-                    pcd_paths.push_back(filename);
-                }
+    // load pcd
+    std::string map_path_or_dir = fs::absolute("src/nodes/pointcloud_map_loader/map").string();
+    std::vector<std::string> pcd_paths{};
+    if (!fs::exists(map_path_or_dir)) {
+        std::cerr<<"invalid map path: " << map_path_or_dir <<std::endl;
+    }
+    if (isPcdFile(map_path_or_dir)) {
+        pcd_paths.push_back(map_path_or_dir);
+    }
+    if (fs::is_directory(map_path_or_dir)) {
+        for (const auto & file : fs::directory_iterator(map_path_or_dir)) {
+            const auto filename = file.path().string();
+            if (isPcdFile(filename)) {
+                pcd_paths.push_back(filename);
             }
         }
-        auto pc_msg = CreatePcd(pcd_paths);
-        auto pc_ptr = std::make_shared<const sensor_msgs::msg::PointCloud2>(pc_msg);
+    }
+    auto pc_msg = CreatePcd(pcd_paths);
+    auto pc_ptr = std::make_shared<const sensor_msgs::msg::PointCloud2>(pc_msg);
 
+    // for (int i = 0; i < 2; i++) {
         // seralize the msg to raw data (e.g. [u8] or Vec<u8>) as following
         std::stringstream ss; // any(in/out) stream can be used
         {
@@ -123,6 +122,6 @@ int main()
             std::cerr << "Error: " << error << std::endl;
             return -1;
         }
-    }
+    // }
     return 0;
 }

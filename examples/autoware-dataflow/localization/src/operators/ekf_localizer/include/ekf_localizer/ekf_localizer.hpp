@@ -100,7 +100,7 @@ public:
     }
 
     // Prediction step (current stddev_)
-    double dt = std::chrono::duration_cast<std::chrono::seconds>(time - latest_time_).count();
+    double dt = std::chrono::duration_cast<std::chrono::milliseconds>(time - latest_time_).count() / 1000.0;
     double proc_dev_x_d = proc_dev_x_c_ * dt * dt;
     dev_ = dev_ + proc_dev_x_d;
 
@@ -146,6 +146,7 @@ public:
   geometry_msgs::msg::TransformStamped::ConstSharedPtr get_TF_map2baselink_msg_ptr(){
     return std::make_shared<const geometry_msgs::msg::TransformStamped>(TF_map2baselink_msg_);
   }
+  bool is_ekf_result_set(){return is_ekf_result_set_;}
 
   ///computes update & prediction of EKF for each ekf_dt_[s] time
   void timerCallback();
@@ -224,6 +225,7 @@ private:
   double proc_cov_wz_d_;        //!< @brief  discrete process noise in d_wz=0
 
   bool is_initialized_;
+  bool is_ekf_result_set_;
 
   /* for model prediction */
   std::queue<TwistInfo> current_twist_info_queue_;    //!< @brief current measured pose

@@ -691,7 +691,7 @@ std::unique_ptr<NDTScanMatcher> new_operator(const NDTScanMatcherConfig &cfg)
 OnInputResult on_input(NDTScanMatcher &op, rust::Str id, rust::Slice<const uint8_t> data, OutputSender &output_sender)
 {
   // input process.  
-  // std::cout << "NDTScanMatcher operator received input `" << id << "` with data `" << (unsigned int)data[0] << std::endl;
+  std::cout << "NDTScanMatcher operator received input `" << id << "` with data `" << (unsigned int)data[0] << std::endl;
   
   // deseralize
   std::stringstream ss; // any(in/out) stream can be used
@@ -749,7 +749,7 @@ OnInputResult on_input(NDTScanMatcher &op, rust::Str id, rust::Slice<const uint8
       OnInputResult result_pose = {send_result_pose.error, false};
       return result_pose;
     }
-  } else {
+  } else if (id == "downsampled_pointcloud") {
     sensor_msgs::msg::PointCloud2::ConstSharedPtr pointcloud_ptr;
     {
       cereal::PortableBinaryInputArchive iarchive(ss);

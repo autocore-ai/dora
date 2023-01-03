@@ -86,8 +86,8 @@ void MapHeightFitter::on_fit(
   PoseWithCovarianceStamped::ConstSharedPtr gnss_pose_ptr)
 {
   const auto cur_time = std::chrono::system_clock::now();
-  const double elapsed = std::chrono::duration_cast<std::chrono::seconds>(
-    cur_time - time_utils::from_message(gnss_pose_ptr->header.stamp)).count();
+  const double elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
+    cur_time - time_utils::from_message(gnss_pose_ptr->header.stamp)).count() / 1000.0;
   if (timeout_ < elapsed) {
     const std::string s = "The GNSS pose is out of date.";
     throw std::runtime_error(s);
