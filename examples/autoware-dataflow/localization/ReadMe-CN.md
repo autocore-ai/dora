@@ -106,13 +106,13 @@ source install/setup.bash
   >
   > 取消发布 `state_`变量, 初始化部分不再调用`automatic_pose_initializer`节点. 主要原因有两点, 一是调用该节点额外涉及很多依赖包; 二是替换`automatic_pose_initializer`节点中涉及的 Service 调用和 Timer调用等功能比较麻烦. 重新定义枚举变量 `InitializationState` 用于记录位置初始化状态.
 
-- `map_height_fitter` 来自 [autoware.universe/localization/pose_initializer](https://github.com/autowarefoundation/autoware.universe/tree/8e92d176721e71943d7dff0722365cb9ee97379f/localization/pose_initializer), 改动较大. 作用是订阅 map 和 gnss 消息以便给 gnss 消息的添加高度信息. 改动部分整合了`map_height_fitter`子目录和`gnss_module.cpp`中的逻辑.
+- `map_height_fitter` 来自 [autoware.universe/localization/pose_initializer](https://github.com/autowarefoundation/autoware.universe/tree/8e92d176721e71943d7dff0722365cb9ee97379f/localization/pose_initializer), 改动较大. 作用是订阅 map 和 gnss 消息以便给 gnss 消息的添加高度信息. 改动后的内容整合了`map_height_fitter`子目录和`gnss_module.cpp`中的逻辑.
 
 - `gyro_odometer` 来自 [autoware.universe/localization/gyro_odometer](https://github.com/autowarefoundation/autoware.universe/tree/8e92d176721e71943d7dff0722365cb9ee97379f/localization/gyro_odometer), 必要改动. 作用是综合来自 imu 角速度信息和车辆线控给出的线速度信息, 然后发布车辆速度的观测值.
 
 - `pointcloud_downsample` 来自 [autoware.universe/sensing/pointcloud_preprocessor](https://github.com/autowarefoundation/autoware.universe/tree/8e92d176721e71943d7dff0722365cb9ee97379f/sensing/pointcloud_preprocessor), 原始点云输入ndt进行配准前的降采样模块, 改动较大. 原代码中`pointcloud_preprocessor`有很多功能, 涉及C++类的继承, 基类本身就比较复杂且原有架构是按ROS2 Component 设计的. 既然定位模块只用到`crop_box_filter`, `voxel_grid_downsample_filter`, `random_downsample_filter`三个功能, 这里保留原来的基本框架 , 删繁就简, 构建面向定位模块的点云降采样operator.
 
-  > 这里取消了基类`fliter`和不同子 filter 之间之间的继承关系, 主要原因有两方面. 
+  > 这里取消了基类`filter`和不同子 filter 之间之间的继承关系, 主要原因有两方面. 
   >
   > 其一, 在dora中不再需要使用ROS2 Component机制;
   >
