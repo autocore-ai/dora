@@ -363,6 +363,7 @@ void NDTScanMatcher::callbackSensorPoints(
     initial_pose_new_msg_ptr);
   popOldPose(initial_pose_msg_ptr_array_, sensor_ros_time);
 
+  /*
   // check the time stamp
   bool valid_old_timestamp = validateTimeStampDifference(
     initial_pose_old_msg_ptr->header.stamp, sensor_ros_time, initial_pose_timeout_sec_);
@@ -379,6 +380,7 @@ void NDTScanMatcher::callbackSensorPoints(
     std::cerr << "Validation error." << std::endl;
     return;
   }
+  */
 
   // If regularization is enabled and available, set pose to NDT for regularization
   if (regularization_enabled_ && (ndt_implement_type_ == NDTImplementType::OMP)) {
@@ -574,6 +576,8 @@ geometry_msgs::msg::PoseWithCovarianceStamped NDTScanMatcher::alignUsingMonteCar
   auto output_cloud = std::make_shared<pcl::PointCloud<PointSource>>();
 
   for (unsigned int i = 0; i < initial_poses.size(); i++) {
+    const auto exe_start_time = std::chrono::system_clock::now(); // for debug
+
     const auto & initial_pose = initial_poses[i];
 
     const Eigen::Affine3d initial_pose_affine = fromRosPoseToEigen(initial_pose);
@@ -588,6 +592,10 @@ geometry_msgs::msg::PoseWithCovarianceStamped NDTScanMatcher::alignUsingMonteCar
 
     const auto transform_probability = ndt_ptr->getTransformationProbability();
     const auto num_iteration = ndt_ptr->getFinalNumIteration();
+
+    const auto exe_end_time = std::chrono::system_clock::now(); // for debug
+    const double exe_time = std::chrono::duration_cast<std::chrono::microseconds>(exe_end_time - exe_start_time).count() / 1000.0;
+    std::cout << "The alignUsingMonteCarlo execute time is: "<< exe_time << " ms, " << "and NumIteration is: " << num_iteration << std::endl;  // for debug
 
     Particle particle(initial_pose, result_pose, transform_probability, num_iteration);
     particle_array.push_back(particle);

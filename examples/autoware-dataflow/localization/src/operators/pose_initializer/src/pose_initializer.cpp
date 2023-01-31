@@ -39,6 +39,8 @@
 #include <memory>
 #include <vector>
 #include <iostream>
+#include <chrono>
+#include <thread>
 
 // #include <cereal/archives/binary.hpp>
 #include "cereal/archives/portable_binary.hpp"
@@ -109,6 +111,7 @@ OnInputResult on_input(PoseInitializer &op, rust::Str id, rust::Slice<const uint
     }
     op.on_manual_pose(manual_pose_ptr);
     // output construct
+    std::this_thread::sleep_for(std::chrono::seconds(4)); // sleep for 4s
     ss.clear();
     {
       cereal::PortableBinaryOutputArchive oarchive(ss);
@@ -129,6 +132,7 @@ OnInputResult on_input(PoseInitializer &op, rust::Str id, rust::Slice<const uint
     }
     op.on_fitted_gnss_pose(fitted_gnss_pose_ptr);
     if (op.use_gnss_req()){
+      std::this_thread::sleep_for(std::chrono::seconds(4)); // sleep for 4s
       ss.clear();
       {
         cereal::PortableBinaryOutputArchive oarchive(ss);
