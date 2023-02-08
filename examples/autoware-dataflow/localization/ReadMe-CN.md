@@ -37,6 +37,16 @@ source install/setup.bash
 
 本来通过 `cargo run --example localization-dataflow` 就可以直接运行程序了, 但由于没法在脚本 *examples/autoware-dataflow/localization/run.rs* 里有效地调用 `source install/setup.bash` 命令, 所有才需要手动 source 位于 *install* 目录下安装好的 ROS2 动态库和可执行程序, 然后才能通过 dora-coordinator 和 dora-runtime 将程序运行起来.
 
+对于第二次或以后的编译, 如果有必要，可能需要添加一个额外的命令来重新编译Dora operators 的ROS2侧的代码. 添加此额外命令的原因如下: "Dora/examples/autoware dataflow/location/src/operators” 里每个Dora operator的 `build.rs`中包含类似`println!(“cargo:rerun-if-changed=src/imu_corrector.cpp”）`, 如果被追踪的文件 (例如 “imu_correrector.cpp”) 发生更改, 则会自动触发重新编译. 然而, 有时ROS2编译生成的 “build”、“log” 和 “install” 文件夹可能会在调试过程中被用户手动删除. 由于删除的是编译生成的文件, 而不是源文件, 所以并不会触发`println!(“cargo:rerun-if-changed=src/xxx.xxx”）`想要的重新编译. 此时, 需要按如下方式显式重新编译ROS2侧的代码: 
+
+```bash
+# Compile
+cd dora/examples/autoware-dataflow/localization
+source /opt/ros/galactic/setup.bash
+colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release  # optional
+cargo run --example localization-dataflow
+```
+
 # 软件包改写说明
 
 **auxiliary中的包 (纯ros节点): **

@@ -26,7 +26,7 @@ nodes:
         tick: dora/timer/millis/5000
       outputs:
         - initial_pose
-  
+
   - id: tf_publisher
     custom:
       source: install/tf_publisher/lib/tf_publisher/tf_publisher_native

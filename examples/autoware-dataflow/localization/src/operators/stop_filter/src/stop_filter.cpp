@@ -86,7 +86,7 @@ OnInputResult on_input(StopFilter &op, rust::Str id, rust::Slice<const uint8_t> 
   op.callbackOdometry(odom_ptr);
 
   // output construct
-  ss.clear();
+  ss.str(""); // clear the buffer of ss
   {
     cereal::PortableBinaryOutputArchive oarchive(ss);
     oarchive(op.get_output_odom_ptr());

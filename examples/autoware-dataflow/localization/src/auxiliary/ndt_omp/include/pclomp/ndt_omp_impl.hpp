@@ -59,8 +59,8 @@
 #ifndef PCL_REGISTRATION_NDT_OMP_IMPL_H_
 #define PCL_REGISTRATION_NDT_OMP_IMPL_H_
 
-#include <stdio.h>  // for using printf
-#include <chrono> // for cal execute time
+// #include <stdio.h>  // for using printf
+// #include <chrono> // for cal execute time
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename PointSource, typename PointTarget>
@@ -145,7 +145,7 @@ pclomp::NormalDistributionsTransform<PointSource, PointTarget>::computeTransform
     regularization_pose_translation_ = regularization_pose_transformation.translation();
   }
 
-  const auto exe_start_time = std::chrono::system_clock::now(); // for debug
+  // const auto exe_start_time = std::chrono::system_clock::now(); // for debug
 
   // Calculate derivatives of initial transform vector, subsequent derivative calculations are done in the step length determination.
   score = computeDerivatives (score_gradient, hessian, output, p);
@@ -180,7 +180,6 @@ pclomp::NormalDistributionsTransform<PointSource, PointTarget>::computeTransform
     delta_p_norm = computeStepLengthMT (p, delta_p, delta_p_norm, step_size_, transformation_epsilon_ / 2, score, score_gradient, hessian, output);
     delta_p *= delta_p_norm;
 
-
     transformation_ = (Eigen::Translation<float, 3> (static_cast<float> (delta_p (0)), static_cast<float> (delta_p (1)), static_cast<float> (delta_p (2))) *
                        Eigen::AngleAxis<float> (static_cast<float> (delta_p (3)), Eigen::Vector3f::UnitX ()) *
                        Eigen::AngleAxis<float> (static_cast<float> (delta_p (4)), Eigen::Vector3f::UnitY ()) *
@@ -204,8 +203,8 @@ pclomp::NormalDistributionsTransform<PointSource, PointTarget>::computeTransform
 
   }
 
-  const auto exe_end_time = std::chrono::system_clock::now(); // for debug
-  const double exe_time = std::chrono::duration_cast<std::chrono::microseconds>(exe_end_time - exe_start_time).count() / 1000.0;
+  // const auto exe_end_time = std::chrono::system_clock::now(); // for debug
+  // const double exe_time = std::chrono::duration_cast<std::chrono::microseconds>(exe_end_time - exe_start_time).count() / 1000.0;
   // printf("==== computeTransformation execute time is %f ms, and the iteration num is %d ====\n", exe_time, nr_iterations_); // for debug
 
   // Store transformation probability. The relative differences within each scan registration are accurate
@@ -261,7 +260,7 @@ pclomp::NormalDistributionsTransform<PointSource, PointTarget>::computeDerivativ
   std::vector<std::vector<TargetGridLeafConstPtr>> neighborhoods(num_threads_);
   std::vector<std::vector<float>> distancess(num_threads_);
 
-  const auto parallel_start_time = std::chrono::system_clock::now(); // for debug
+  // const auto parallel_start_time = std::chrono::system_clock::now(); // for debug
 
 	// Update gradient and hessian for each point, line 17 in Algorithm 2 [Magnusson 2009]
 #pragma omp parallel for num_threads(num_threads_) schedule(guided, 8)
@@ -269,7 +268,7 @@ pclomp::NormalDistributionsTransform<PointSource, PointTarget>::computeDerivativ
 	{
 		int thread_n = omp_get_thread_num();
 
-    // printf("i = %lld, I am Thread %d\n", idx, thread_n);
+    // printf("i = %lu, I am Thread %d \n", idx, thread_n);
 
 		// Original Point and Transformed Point
 		PointSource x_pt, x_trans_pt;
@@ -350,11 +349,11 @@ pclomp::NormalDistributionsTransform<PointSource, PointTarget>::computeDerivativ
 		neighborhood_counts[idx] += neighborhood_count;
 	}
 
-  const auto parallel_end_time = std::chrono::system_clock::now(); // for debug
-  const double parallel_exe_time = std::chrono::duration_cast<std::chrono::microseconds>(parallel_end_time - parallel_start_time).count() / 1000.0;
+  // const auto parallel_end_time = std::chrono::system_clock::now(); // for debug
+  // const double parallel_exe_time = std::chrono::duration_cast<std::chrono::microseconds>(parallel_end_time - parallel_start_time).count() / 1000.0;
   // printf("---- computeDerivatives parallel part execute time is %f ms ----\n", parallel_exe_time); // for debug
 
-  const auto serial_start_time = std::chrono::system_clock::now(); // for debug
+  // const auto serial_start_time = std::chrono::system_clock::now(); // for debug
 
   // Ensure that the result is invariant against the summing up order
   for (std::size_t i = 0; i < input_->points.size(); i++) {
@@ -400,8 +399,8 @@ pclomp::NormalDistributionsTransform<PointSource, PointTarget>::computeDerivativ
     nearest_voxel_transformation_likelihood_ = 0.0;
   }
 
-  const auto serial_end_time = std::chrono::system_clock::now(); // for debug
-  const double serial_exe_time = std::chrono::duration_cast<std::chrono::microseconds>(serial_end_time - serial_start_time).count() / 1000.0;
+  // const auto serial_end_time = std::chrono::system_clock::now(); // for debug
+  // const double serial_exe_time = std::chrono::duration_cast<std::chrono::microseconds>(serial_end_time - serial_start_time).count() / 1000.0;
   // printf("---- computeDerivatives serial part execute time is %f ms ----\n", serial_exe_time); // for debug
 
 	return (score);

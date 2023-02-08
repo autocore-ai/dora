@@ -116,7 +116,7 @@ OnInputResult on_input(VoxelGridFilter &op, rust::Str id, rust::Slice<const uint
     op.callback_scan(pc_ptr);
 
     // output construct. convert the msg to raw data(e.g. [u8] or Vec<u8>)
-    ss.clear();
+    ss.str(""); // clear the buffer of ss
     {
         cereal::PortableBinaryOutputArchive oarchive(ss); // Create an output archive
         oarchive(op.get_filtered_msg_ptr()); // Write the data to the archive

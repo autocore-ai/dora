@@ -91,7 +91,7 @@ OnInputResult on_input(ImuCorrector &op, rust::Str id, rust::Slice<const uint8_t
   op.callbackImu(imu_ptr);
 
   // output construct
-  ss.clear();
+  ss.str(""); // clear the buffer of ss
   {
     cereal::PortableBinaryOutputArchive oarchive(ss);
     oarchive(op.get_imu_msg_ptr());

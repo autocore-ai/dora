@@ -55,6 +55,7 @@ public:
   ~PointcloudDownsample();
 
   PointCloud2ConstPtr get_downsampled_pointcloud_msg_ptr(){
+    // std::copy(downsampled_pointcloud_msg_.data.begin(), downsampled_pointcloud_msg_.data.begin()+64, std::ostream_iterator<uint8_t>(std::cout, ","));  // for debug
     return std::make_shared<const PointCloud2>(downsampled_pointcloud_msg_);
   }
 

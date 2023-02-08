@@ -63,12 +63,11 @@ void GyroOdometer::callbackTwistWithCovariance(
   // TODO(YamatoAndo) trans from twist_with_cov_msg_ptr->header to base_frame
   twist_with_cov_msg_ptr_ = twist_with_cov_msg_ptr;
 
-  /*
   if (!imu_msg_ptr_) {
-    std::cerr << "Imu msg is not subscribed" << std::endl;
+    // std::cerr << "Imu msg is not subscribed" << std::endl;
     return;
   }
-
+  /*
   const double imu_dt = std::abs(std::chrono::duration_cast<std::chrono::milliseconds>(
     std::chrono::system_clock::now() - time_utils::from_message(imu_msg_ptr_->header.stamp)).count()) / 1000.0;
   if (imu_dt > message_timeout_sec_) {
@@ -90,7 +89,6 @@ void GyroOdometer::callbackImu(const sensor_msgs::msg::Imu::ConstSharedPtr imu_m
     std::cerr << "Twist msg is not subscribed" << std::endl;
     return;
   }
-
   /*
   const double twist_dt = std::abs(std::chrono::duration_cast<std::chrono::milliseconds>(
     std::chrono::system_clock::now() - time_utils::from_message(twist_with_cov_msg_ptr_->header.stamp)).count()) / 1000.0;
@@ -165,6 +163,7 @@ OnInputResult on_input(GyroOdometer &op, rust::Str id, rust::Slice<const uint8_t
   // deseralize
   std::stringstream ss; // any(in/out) stream can be used
   copy(data.begin(), data.end(), std::ostream_iterator<unsigned char>(ss,""));
+
   if (id == "tf_baselink2imu") {
     geometry_msgs::msg::TransformStamped::ConstSharedPtr TF_baselink2imu_ptr;
     {
@@ -179,7 +178,7 @@ OnInputResult on_input(GyroOdometer &op, rust::Str id, rust::Slice<const uint8_t
       iarchive(twist_with_cov_ptr);
     }
     op.callbackTwistWithCovariance(twist_with_cov_ptr);
-  } else {
+  } else if (id == "imu") {
     sensor_msgs::msg::Imu::ConstSharedPtr imu_ptr;
     {
       cereal::PortableBinaryInputArchive iarchive(ss);
@@ -188,7 +187,7 @@ OnInputResult on_input(GyroOdometer &op, rust::Str id, rust::Slice<const uint8_t
     op.callbackImu(imu_ptr);
 
     // output construct
-    ss.clear();
+    ss.str(""); // clear the buffer of ss
     {
       cereal::PortableBinaryOutputArchive oarchive(ss);
       oarchive(op.get_twist_with_cov_msg_ptr());

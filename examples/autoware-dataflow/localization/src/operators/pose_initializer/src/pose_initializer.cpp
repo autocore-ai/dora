@@ -97,7 +97,7 @@ std::unique_ptr<PoseInitializer> new_operator(const PoseInitializerConfig &cfg)
 OnInputResult on_input(PoseInitializer &op, rust::Str id, rust::Slice<const uint8_t> data, OutputSender &output_sender)
 {
   // input process.  
-  std::cout << "PoseInitializer operator received input `" << id << "` with data `" << (unsigned int)data[0] << std::endl;
+  // std::cout << "PoseInitializer operator received input `" << id << "` with data `" << (unsigned int)data[0] << std::endl;
   
   // deseralize
   std::stringstream ss; // any(in/out) stream can be used
@@ -111,8 +111,8 @@ OnInputResult on_input(PoseInitializer &op, rust::Str id, rust::Slice<const uint
     }
     op.on_manual_pose(manual_pose_ptr);
     // output construct
-    std::this_thread::sleep_for(std::chrono::seconds(4)); // sleep for 4s
-    ss.clear();
+    std::this_thread::sleep_for(std::chrono::seconds(4)); // sleep for 4s to wait the ndt_align service ready
+    ss.str(""); // clear the buffer of ss
     {
       cereal::PortableBinaryOutputArchive oarchive(ss);
       oarchive(op.get_align_request_msg_ptr());
@@ -132,8 +132,8 @@ OnInputResult on_input(PoseInitializer &op, rust::Str id, rust::Slice<const uint
     }
     op.on_fitted_gnss_pose(fitted_gnss_pose_ptr);
     if (op.use_gnss_req()){
-      std::this_thread::sleep_for(std::chrono::seconds(4)); // sleep for 4s
-      ss.clear();
+      std::this_thread::sleep_for(std::chrono::seconds(4)); // sleep for 4s to wait the ndt_align service ready
+      ss.str("");
       {
         cereal::PortableBinaryOutputArchive oarchive(ss);
         oarchive(op.get_align_request_msg_ptr());
@@ -155,7 +155,7 @@ OnInputResult on_input(PoseInitializer &op, rust::Str id, rust::Slice<const uint
     }
     op.on_aligned_response_pose(aligned_response_pose_ptr);
     // output construct
-    ss.clear();
+    ss.str("");
     {
       cereal::PortableBinaryOutputArchive oarchive(ss);
       oarchive(op.get_reset_msg_ptr());

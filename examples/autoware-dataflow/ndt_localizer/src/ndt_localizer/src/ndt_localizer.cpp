@@ -298,7 +298,7 @@ OnInputResult on_input(NdtLocalizer &op, rust::Str id, rust::Slice<const uint8_t
         op.callback_pointcloud(pointcloud_ptr);
 
         // output construct
-        ss.clear();
+        ss.str(""); // clear the buffer of ss
         {
             cereal::PortableBinaryOutputArchive oarchive(ss);
             oarchive(op.get_transform_probability_msg_ptr());
@@ -310,7 +310,7 @@ OnInputResult on_input(NdtLocalizer &op, rust::Str id, rust::Slice<const uint8_t
         auto send_result_trans_prob = send_output(output_sender, rust::Str("transform_porbability"), out_slice_trans_prob);
         OnInputResult result_trans_prob = {send_result_trans_prob.error, false};
 
-        ss.clear();
+        ss.str("");
         {
             cereal::PortableBinaryOutputArchive oarchive(ss);
             oarchive(op.get_iteration_num_msg_ptr());
@@ -321,7 +321,7 @@ OnInputResult on_input(NdtLocalizer &op, rust::Str id, rust::Slice<const uint8_t
         auto send_result_iter_num = send_output(output_sender, rust::Str("iteration_num"), out_slice_iter_num);
         OnInputResult result_iter_num = {send_result_iter_num.error, false};
 
-        ss.clear();
+        ss.str("");
         {
             cereal::PortableBinaryOutputArchive oarchive(ss);
             oarchive(op.get_tf_map2baselink_ptr());
@@ -332,7 +332,7 @@ OnInputResult on_input(NdtLocalizer &op, rust::Str id, rust::Slice<const uint8_t
         auto send_result_tf_map2baselink = send_output(output_sender, rust::Str("tf_map2baselink"), out_slice_tf_map2baselink);
         OnInputResult result_tf_map2baselink = {send_result_tf_map2baselink.error, false};
 
-        ss.clear();
+        ss.str("");
         {
             cereal::PortableBinaryOutputArchive oarchive(ss); // Create an output archive
             oarchive(op.get_ndt_pose_msg_ptr()); // Write the data to the archive

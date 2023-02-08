@@ -56,9 +56,9 @@ int main()
         0.0, 0.0, 0.0,  0.0,  0.0,  0.2,
     };
     // geometry_msgs::msg::Vector3 xyz(-6.865, -1.397, -1.906);
-    // geometry_msgs::msg::Vector3 rpy(0.0, 0.0, -165.0);    // the corresponding quaternion xyzw (0.0, 0.0, -0.992, 0.125)
+    // geometry_msgs::msg::Vector3 rpy(0.0, 0.0, -2.88);    // the corresponding quaternion xyzw (0.0, 0.0, -0.992, 0.125)
     tf2::Quaternion tf_quaternion;
-    tf_quaternion.setRPY(0.0, 0.0, -165.0);
+    tf_quaternion.setRPY(0.0, 0.0, -2.88);
     geometry_msgs::msg::PoseWithCovarianceStamped init_pose_msg;
 
     // for (int i = 0; i < 2; i++) {

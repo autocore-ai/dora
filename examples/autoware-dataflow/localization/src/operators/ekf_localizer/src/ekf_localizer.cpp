@@ -226,6 +226,9 @@ void EKFLocalizer::timerCallback()
   current_ekf_twist_.twist.linear.x = vx;
   current_ekf_twist_.twist.angular.z = wz;
 
+  // for debug
+  // printf("the ekf output: position-xyz(%f, %f, %f), orientation-rpy(%f, %f, %f), linear-x(%f), angular-z(%f)\n", x, y, z, roll, pitch, yaw, vx, wz);
+
   /* set ekf result */
   setEstimateResult();
   is_ekf_result_set_ = true;
@@ -681,7 +684,7 @@ OnInputResult on_input(EKFLocalizer &op, rust::Str id, rust::Slice<const uint8_t
     op.timerTFCallback();
     if(op.is_ekf_result_set()){
       // pose_with_covariance
-      ss.clear();
+      ss.str(""); // clear the buffer of ss
       {
         cereal::PortableBinaryOutputArchive oarchive(ss);
         oarchive(op.get_pose_with_cov_msg_ptr());
@@ -693,7 +696,7 @@ OnInputResult on_input(EKFLocalizer &op, rust::Str id, rust::Slice<const uint8_t
       OnInputResult result_pose_cov = {send_result_pose_cov.error, false};
 
       // twist_with_covariance
-      ss.clear();
+      ss.str("");
       {
         cereal::PortableBinaryOutputArchive oarchive(ss);
         oarchive(op.get_twist_with_cov_msg_ptr());
@@ -705,7 +708,7 @@ OnInputResult on_input(EKFLocalizer &op, rust::Str id, rust::Slice<const uint8_t
       OnInputResult result_twist_cov = {send_result_twist_cov.error, false};
 
       // biased_pose_with_covariance
-      ss.clear();
+      ss.str("");
       {
         cereal::PortableBinaryOutputArchive oarchive(ss);
         oarchive(op.get_biased_pose_with_cov_msg_ptr());
@@ -717,7 +720,7 @@ OnInputResult on_input(EKFLocalizer &op, rust::Str id, rust::Slice<const uint8_t
       OnInputResult result_biased_pose_cov = {send_result_biased_pose_cov.error, false};
 
       // kinematic state
-      ss.clear();
+      ss.str("");
       {
         cereal::PortableBinaryOutputArchive oarchive(ss);
         oarchive(op.get_kinematic_msg_ptr());
@@ -725,11 +728,11 @@ OnInputResult on_input(EKFLocalizer &op, rust::Str id, rust::Slice<const uint8_t
       str = ss.str();
       uchar = std::vector<unsigned char>(str.data(), str.data()+str.size()+1);
       rust::Slice<const uint8_t> out_slice_kinematic{uchar.data(), uchar.size()};
-      auto send_result_kinematic = send_output(output_sender, rust::Str("tf_map2baselink"), out_slice_kinematic);
+      auto send_result_kinematic = send_output(output_sender, rust::Str("kinematic_state"), out_slice_kinematic);
       OnInputResult result_kinematic = {send_result_kinematic.error, false};
 
       // TF map2baselink
-      ss.clear();
+      ss.str("");
       {
         cereal::PortableBinaryOutputArchive oarchive(ss);
         oarchive(op.get_TF_map2baselink_msg_ptr());

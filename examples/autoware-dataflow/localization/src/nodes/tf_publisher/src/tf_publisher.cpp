@@ -109,7 +109,7 @@ int main()
     }
     // std::cout << "TF_publisher node received input " << std::string(input.id) << std::endl;
 
-    for (int i = 0; i < 2; i++) {
+    // for (int i = 0; i < 2; i++) {
         // publisher the transform.
         auto baselink2lidar_ptr = get_tf_baselink2lidar();
         auto baselink2imu_ptr = get_tf_baselink2imu();        
@@ -133,7 +133,7 @@ int main()
             return -1;
         }
 
-        ss.clear();
+        ss.str(""); // clear the buffer of ss
         {
             cereal::PortableBinaryOutputArchive oarchive(ss);
             oarchive(baselink2imu_ptr);
@@ -148,7 +148,7 @@ int main()
             return -1;
         }
 
-        ss.clear();
+        ss.str("");
         {
             cereal::PortableBinaryOutputArchive oarchive(ss);
             oarchive(gnssantenna2baselink_ptr);
@@ -162,6 +162,6 @@ int main()
             std::cerr << "Error: " << error << std::endl;
             return -1;
         }
-    }
+    // }
     return 0;
 }

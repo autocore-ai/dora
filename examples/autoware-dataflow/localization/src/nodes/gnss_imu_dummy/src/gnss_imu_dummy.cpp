@@ -24,7 +24,8 @@
 #include <time_utils/time_utils.hpp>
 #include <sensor_msgs/msg/nav_sat_fix.hpp>
 #include <sensor_msgs/msg/imu.hpp>
-#include <geometry_msgs/msg/quaternion_stamped.hpp>
+// #include <geometry_msgs/msg/quaternion_stamped.hpp>
+#include <autoware_sensing_msgs/msg/gnss_ins_orientation_stamped.hpp>
 
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2/transform_datatypes.h>
@@ -33,8 +34,9 @@
 #include "cereal/archives/portable_binary.hpp"
 #include "cereal/types/memory.hpp"
 #include <sstream>
-#include <cereal_ros_msgs/cereal_geometry_msgs.hpp>
 #include <cereal_ros_msgs/cereal_sensor_msgs.hpp>
+// #include <cereal_ros_msgs/cereal_geometry_msgs.hpp>
+#include <cereal_ros_msgs/cereal_autoware_sensing_msgs.hpp>
 
 
 sensor_msgs::msg::NavSatFix::ConstSharedPtr get_gnss_msg_ptr(std::string & frame_id)
@@ -95,6 +97,7 @@ sensor_msgs::msg::Imu::ConstSharedPtr get_imu_msg_ptr(std::string & frame_id)
     return std::make_shared<const sensor_msgs::msg::Imu>(msg);
 }
 
+/*
 geometry_msgs::msg::QuaternionStamped::ConstSharedPtr get_orientation_msg_ptr(std::string & frame_id)
 {
     geometry_msgs::msg::QuaternionStamped msg;
@@ -111,6 +114,29 @@ geometry_msgs::msg::QuaternionStamped::ConstSharedPtr get_orientation_msg_ptr(st
 
     // return msg;
     return std::make_shared<const geometry_msgs::msg::QuaternionStamped>(msg);
+}
+*/
+
+autoware_sensing_msgs::msg::GnssInsOrientationStamped::ConstSharedPtr get_orientation_msg_ptr(std::string & frame_id)
+{
+    autoware_sensing_msgs::msg::GnssInsOrientationStamped msg;
+    msg.header.frame_id = frame_id; // // set "imu_link" if using pbox else set "gnss_link"
+    msg.header.stamp = time_utils::to_message(std::chrono::system_clock::now());
+
+    tf2::Quaternion tf_quaternion;
+    tf_quaternion.setRPY(0.0, 0.0, -2.8905903);    // may need to be adjust
+
+    msg.orientation.orientation.w = tf_quaternion.w();
+    msg.orientation.orientation.x = tf_quaternion.x();
+    msg.orientation.orientation.y = tf_quaternion.y();
+    msg.orientation.orientation.z = tf_quaternion.z();
+
+    msg.orientation.rmse_rotation_x = 0.32;
+    msg.orientation.rmse_rotation_y = 0.32;
+    msg.orientation.rmse_rotation_y = 1.0;
+
+    // return msg;
+    return std::make_shared<const autoware_sensing_msgs::msg::GnssInsOrientationStamped>(msg);
 }
 
 int main()
@@ -149,7 +175,7 @@ int main()
             return -1;
         }
 
-        ss.clear();
+        ss.str(""); // clear the buffer of ss
         {
             cereal::PortableBinaryOutputArchive oarchive(ss);
             oarchive(imu_msg_ptr);
@@ -164,7 +190,7 @@ int main()
             return -1;
         }
 
-        ss.clear();
+        ss.str("");
         {
             cereal::PortableBinaryOutputArchive oarchive(ss);
             oarchive(orientation_msg_ptr);

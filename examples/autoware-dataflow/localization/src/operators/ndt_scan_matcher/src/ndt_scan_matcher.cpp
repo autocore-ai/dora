@@ -352,7 +352,7 @@ void NDTScanMatcher::callbackSensorPoints(
   std::unique_lock<std::mutex> initial_pose_array_lock(initial_pose_array_mtx_);
   // check
   if (initial_pose_msg_ptr_array_.size() <= 1) {
-    std::cerr << "No Pose" << std::endl;
+    // std::cerr << "No Pose" << std::endl;
     return;
   }
   // searchNNPose using timestamp
@@ -363,7 +363,7 @@ void NDTScanMatcher::callbackSensorPoints(
     initial_pose_new_msg_ptr);
   popOldPose(initial_pose_msg_ptr_array_, sensor_ros_time);
 
-  /*
+  ///*
   // check the time stamp
   bool valid_old_timestamp = validateTimeStampDifference(
     initial_pose_old_msg_ptr->header.stamp, sensor_ros_time, initial_pose_timeout_sec_);
@@ -380,7 +380,7 @@ void NDTScanMatcher::callbackSensorPoints(
     std::cerr << "Validation error." << std::endl;
     return;
   }
-  */
+  //*/
 
   // If regularization is enabled and available, set pose to NDT for regularization
   if (regularization_enabled_ && (ndt_implement_type_ == NDTImplementType::OMP)) {
@@ -534,6 +534,13 @@ void NDTScanMatcher::callbackSensorPoints(
     makeFloat32Stamped(sensor_ros_time, nearest_voxel_transformation_likelihood);
   iteration_num_msg_ = makeInt32Stamped(sensor_ros_time, iteration_num);
 
+  std::cout << "The NDT Execute Time is: "<< exe_time << " ms" << ", and Iteration Num is: " << iteration_num << std::endl;  // for debug
+  if (converged_param_type_ == ConvergedParamType::TRANSFORM_PROBABILITY) {
+    std::cout << "The NDT Transform Probability is: "<< transform_probability << std::endl;
+  } else if (converged_param_type_ == ConvergedParamType::NEAREST_VOXEL_TRANSFORMATION_LIKELIHOOD) {
+    std::cout << "The NDT Nearest Voxel Transform Probability is is: "<< nearest_voxel_transformation_likelihood << std::endl;
+  } // for debug
+
   const float initial_to_result_distance =
     norm(initial_pose_with_cov_msg_.pose.pose.position, ndt_pose_with_cov_msg_.pose.pose.position);
   initial_to_result_distance_msg_ = 
@@ -576,7 +583,7 @@ geometry_msgs::msg::PoseWithCovarianceStamped NDTScanMatcher::alignUsingMonteCar
   auto output_cloud = std::make_shared<pcl::PointCloud<PointSource>>();
 
   for (unsigned int i = 0; i < initial_poses.size(); i++) {
-    const auto exe_start_time = std::chrono::system_clock::now(); // for debug
+    // const auto exe_start_time = std::chrono::system_clock::now(); // for debug
 
     const auto & initial_pose = initial_poses[i];
 
@@ -593,9 +600,9 @@ geometry_msgs::msg::PoseWithCovarianceStamped NDTScanMatcher::alignUsingMonteCar
     const auto transform_probability = ndt_ptr->getTransformationProbability();
     const auto num_iteration = ndt_ptr->getFinalNumIteration();
 
-    const auto exe_end_time = std::chrono::system_clock::now(); // for debug
-    const double exe_time = std::chrono::duration_cast<std::chrono::microseconds>(exe_end_time - exe_start_time).count() / 1000.0;
-    std::cout << "The alignUsingMonteCarlo execute time is: "<< exe_time << " ms, " << "and NumIteration is: " << num_iteration << std::endl;  // for debug
+    // const auto exe_end_time = std::chrono::system_clock::now(); // for debug
+    // const double exe_time = std::chrono::duration_cast<std::chrono::microseconds>(exe_end_time - exe_start_time).count() / 1000.0;
+    // std::cout << "The alignUsingMonteCarlo execute time is: "<< exe_time << " ms, " << "and NumIteration is: " << num_iteration << std::endl;  // for debug
 
     Particle particle(initial_pose, result_pose, transform_probability, num_iteration);
     particle_array.push_back(particle);
@@ -699,7 +706,7 @@ std::unique_ptr<NDTScanMatcher> new_operator(const NDTScanMatcherConfig &cfg)
 OnInputResult on_input(NDTScanMatcher &op, rust::Str id, rust::Slice<const uint8_t> data, OutputSender &output_sender)
 {
   // input process.  
-  std::cout << "NDTScanMatcher operator received input `" << id << "` with data `" << (unsigned int)data[0] << std::endl;
+  // std::cout << "NDTScanMatcher operator received input `" << id << "` with data `" << (unsigned int)data[0] << std::endl;
   
   // deseralize
   std::stringstream ss; // any(in/out) stream can be used
@@ -743,7 +750,7 @@ OnInputResult on_input(NDTScanMatcher &op, rust::Str id, rust::Slice<const uint8
     }
     op.serviceNDTAlign(align_request_pose_ptr);
     // output construct
-    ss.clear();
+    ss.str(""); // clear the buffer of ss
     {
       cereal::PortableBinaryOutputArchive oarchive(ss); // Create an output archive
       oarchive(op.get_aligned_response_msg_ptr()); // Write the data to the archive
@@ -763,10 +770,11 @@ OnInputResult on_input(NDTScanMatcher &op, rust::Str id, rust::Slice<const uint8
       cereal::PortableBinaryInputArchive iarchive(ss);
       iarchive(pointcloud_ptr);
     }
+    // std::copy(pointcloud_ptr->data.begin(), pointcloud_ptr->data.begin()+64, std::ostream_iterator<uint8_t>(std::cout, ":")); // for debug
     op.callbackSensorPoints(pointcloud_ptr);
 
     // output construct
-    ss.clear();
+    ss.str("");
     {
       cereal::PortableBinaryOutputArchive oarchive(ss); // Create an output archive
       oarchive(op.get_ndt_pose_msg_ptr()); // Write the data to the archive

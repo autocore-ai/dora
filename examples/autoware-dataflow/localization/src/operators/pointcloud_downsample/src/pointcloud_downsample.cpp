@@ -64,6 +64,8 @@ void PointcloudDownsample::filter(const PointCloud2ConstPtr &input)
   random_downsample_->filter(
     std::make_shared<const PointCloud2>(voxel_grid_downsample_output), 
     downsampled_pointcloud_msg_);
+    
+  // std::cout << "randon_downsample output cloud size: " << downsampled_pointcloud_msg_.width * downsampled_pointcloud_msg_.height << std::endl; // for debug
 }
 
 
@@ -96,7 +98,7 @@ OnInputResult on_input(
   op.filter(raw_pointcloud_ptr);
 
   // output construct
-  ss.clear();
+  ss.str(""); // clear the buffer of ss
   {
     cereal::PortableBinaryOutputArchive oarchive(ss);
     oarchive(op.get_downsampled_pointcloud_msg_ptr());

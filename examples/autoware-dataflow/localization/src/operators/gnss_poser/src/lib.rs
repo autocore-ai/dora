@@ -20,7 +20,7 @@ impl Default for GNSSPoserWrapper {
             // Position buffer capacity
             buff_epoch: 1,
             // Is using gnss_ins_orientation
-            use_gnss_ins_orientation: false,
+            use_gnss_ins_orientation: true,
             // Plane zone number
             plane_zone: 9,
             // Latitude of local origin

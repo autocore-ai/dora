@@ -326,7 +326,7 @@ OnInputResult on_input(GNSSPoser &op, rust::Str id, rust::Slice<const uint8_t> d
       iarchive(TF_gnssantenna2baselink_ptr);
     }
     op.callback_tf_gnssantenna2baselink(TF_gnssantenna2baselink_ptr);
-  } else {
+  } else if (id == "nav_sat_fix") {
     sensor_msgs::msg::NavSatFix::ConstSharedPtr nav_sat_fix_ptr;
     {
       cereal::PortableBinaryInputArchive iarchive(ss);
@@ -335,7 +335,7 @@ OnInputResult on_input(GNSSPoser &op, rust::Str id, rust::Slice<const uint8_t> d
     op.callbackNavSatFix(nav_sat_fix_ptr);
 
     // output construct
-    ss.clear();
+    ss.str(""); // clear the buffer of ss
     {
       cereal::PortableBinaryOutputArchive oarchive(ss); // Create an output archive
       oarchive(op.get_gnss_pose_msg_ptr()); // Write the data to the archive

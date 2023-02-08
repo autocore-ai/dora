@@ -85,13 +85,14 @@ double MapHeightFitter::get_ground_height(const tf2::Vector3 & point) const
 void MapHeightFitter::on_fit(
   PoseWithCovarianceStamped::ConstSharedPtr gnss_pose_ptr)
 {
-  const auto cur_time = std::chrono::system_clock::now();
+  /*
   const double elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
-    cur_time - time_utils::from_message(gnss_pose_ptr->header.stamp)).count() / 1000.0;
+    std::chrono::system_clock::now() - time_utils::from_message(gnss_pose_ptr->header.stamp)).count() / 1000.0;
   if (timeout_ < elapsed) {
     const std::string s = "The GNSS pose is out of date.";
     throw std::runtime_error(s);
   }
+  */
 
   const auto & position = gnss_pose_ptr->pose.pose.position;
   tf2::Vector3 point(position.x, position.y, position.z);
@@ -133,7 +134,7 @@ OnInputResult on_input(MapHeightFitter &op, rust::Str id, rust::Slice<const uint
       iarchive(map_ptr);
     }
     op.on_map(map_ptr);
-  } else {
+  } else if (id == "gnss_pose") {
     geometry_msgs::msg::PoseWithCovarianceStamped::ConstSharedPtr gnss_pose_ptr;
     {
       cereal::PortableBinaryInputArchive iarchive(ss);
@@ -141,7 +142,7 @@ OnInputResult on_input(MapHeightFitter &op, rust::Str id, rust::Slice<const uint
     }
     op.on_fit(gnss_pose_ptr);
     // output construct
-    ss.clear();
+    ss.str(""); // clear the buffer of ss
     {
       cereal::PortableBinaryOutputArchive oarchive(ss);
       oarchive(op.get_fitted_gnss_msg_ptr());
